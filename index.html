@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAT/PAT Lernmodul – IHK-Travel GmbH</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: #1f2d47;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --accent3: #7c3aed;
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .hero {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .hero h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+  .hero p { display: none; }
+  .badge { display: none; }
+
+  /* PROGRESS */
+  .progress-bar-wrap {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .progress-bar-wrap::-webkit-scrollbar { display: none; }
+  .step-tab {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+  .step-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .step-tab.done {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+  .step-tab .step-num { display: none; }
+
+  /* MAIN CONTENT */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* TYPOGRAPHY */
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+  p { color: #a8b4c8; line-height: 1.75; margin-bottom: 14px; }
+  strong { color: var(--text); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-accent {
+    border-left: 3px solid var(--accent);
+  }
+  .card-orange {
+    border-left: 3px solid var(--accent2);
+  }
+  .card-green {
+    border-left: 3px solid var(--green);
+  }
+  .card-purple {
+    border-left: 3px solid var(--accent3);
+  }
+
+  .highlight-box {
+    background: rgba(0,212,255,0.07);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+  }
+  .highlight-box.orange {
+    background: rgba(255,107,53,0.07);
+    border-color: rgba(255,107,53,0.2);
+  }
+  .highlight-box.green {
+    background: rgba(16,185,129,0.07);
+    border-color: rgba(16,185,129,0.2);
+  }
+
+  /* PACKET TABLE */
+  .packet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .packet-table th {
+    background: var(--surface2);
+    color: var(--accent);
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+  }
+  .packet-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .packet-table tr:last-child td { border-bottom: none; }
+  .packet-table tr:hover td { background: var(--surface2); }
+  .tag-src { color: var(--accent); }
+  .tag-dst { color: var(--accent2); }
+  .tag-pub { color: var(--green); }
+
+  /* NETWORK DIAGRAM */
+  .diagram-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 24px;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .diagram-svg { width: 100%; max-width: 720px; height: auto; }
+
+  /* ANIMATED PACKET */
+  .packet-anim-container {
+    position: relative;
+    height: 90px;
+    margin: 20px 0;
+  }
+  .packet-dot {
+    position: absolute;
+    width: 38px;
+    height: 24px;
+    border-radius: 5px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: #000;
+    font-weight: 700;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: left 1.5s cubic-bezier(.4,0,.2,1), background 0.5s;
+    cursor: default;
+    white-space: nowrap;
+    padding: 2px 3px;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .net-node {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--muted);
+  }
+  .net-node .icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin: 0 auto 4px;
+  }
+  .net-node.highlight .icon {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.1);
+  }
+
+  /* STEPS LIST */
+  .steps-list { list-style: none; counter-reset: steps; }
+  .steps-list li {
+    counter-increment: steps;
+    padding: 14px 16px 14px 52px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .steps-list li:last-child { border-bottom: none; }
+  .steps-list li::before {
+    content: counter(steps);
+    position: absolute;
+    left: 12px;
+    top: 14px;
+    width: 26px;
+    height: 26px;
+    background: var(--accent);
+    color: #000;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .steps-list li p { margin-bottom: 0; }
+
+  /* QUIZ */
+  .quiz-section { margin-top: 10px; }
+  .quiz-question {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .quiz-question .q-text {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 18px;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+  .quiz-option {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.2s;
+  }
+  .quiz-option:hover:not(.answered) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
+  .quiz-option.correct {
+    border-color: var(--green);
+    background: rgba(16,185,129,0.1);
+    color: var(--green);
+  }
+  .quiz-option.wrong {
+    border-color: var(--red);
+    background: rgba(239,68,68,0.1);
+    color: var(--red);
+  }
+  .quiz-feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+  }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .quiz-feedback.err { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+
+  /* FILL-IN */
+  .fill-table { width: 100%; border-collapse: collapse; }
+  .fill-table th {
+    background: var(--surface2);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  .fill-table td {
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+  .fill-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .fill-input:focus { outline: none; border-color: var(--accent); }
+  .fill-input.correct { border-color: var(--green); background: rgba(16,185,129,0.08); color: var(--green); }
+  .fill-input.wrong { border-color: var(--red); background: rgba(239,68,68,0.08); }
+  .fill-given {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #00b8d9; transform: translateY(-1px); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { background: #059669; }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* SCORE */
+  .score-display {
+    text-align: center;
+    padding: 48px 20px;
+  }
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid var(--green);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    background: rgba(16,185,129,0.08);
+  }
+  .score-num {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--green);
+    font-family: var(--mono);
+    line-height: 1;
+  }
+  .score-sub { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+
+  /* SUMMARY TABLE */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .summary-card .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .summary-card .value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* TOOLTIP */
+  .tip {
+    display: inline-block;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.25);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    cursor: help;
+    position: relative;
+  }
+
+  /* PIPE VISUAL */
+  .pipe-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-family: var(--mono);
+    font-size: 13px;
+    margin: 8px 0;
+  }
+  .pipe-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .pipe-node .n-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .pipe-node .n-ip { color: var(--text); }
+  .pipe-arrow {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    position: relative;
+    margin: 0 4px;
+    min-width: 30px;
+  }
+  .pipe-arrow::after {
+    content: '▶';
+    position: absolute;
+    right: -6px;
+    top: -8px;
+    color: var(--accent2);
+    font-size: 11px;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .container { padding: 24px 16px; }
+    .hero { padding: 40px 20px; }
+    .progress-bar-wrap { padding: 0 12px; }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+
+  .accent { color: var(--accent); }
+  .orange { color: var(--accent2); }
+  .green-t { color: var(--green); }
+  .mono { font-family: var(--mono); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">📡 IHK Netzwerktechnik · Lernmodul</div>
+  <h1>NAT & PAT<br>meistern</h1>
+  <p>Schritt-für-Schritt-Erklärung und interaktive Prüfung anhand der IHK-Prüfungsaufgabe der IHK-Travel GmbH</p>
+</div>
+
+<div class="progress-bar-wrap" id="tabBar">
+  <button class="step-tab active" onclick="goTo(0)"><span class="step-num">01</span>Was ist NAT?</button>
+  <button class="step-tab" onclick="goTo(1)"><span class="step-num">02</span>Warum PAT?</button>
+  <button class="step-tab" onclick="goTo(2)"><span class="step-num">03</span>Netzwerk-Kontext</button>
+  <button class="step-tab" onclick="goTo(3)"><span class="step-num">04</span>Abschnitt 1→2</button>
+  <button class="step-tab" onclick="goTo(4)"><span class="step-num">05</span>Abschnitt 2→3</button>
+  <button class="step-tab" onclick="goTo(5)"><span class="step-num">06</span>Abschnitt 3→4</button>
+  <button class="step-tab" onclick="goTo(6)"><span class="step-num">07</span>Übung</button>
+  <button class="step-tab" onclick="goTo(7)"><span class="step-num">08</span>Wissenstest</button>
+  <button class="step-tab" onclick="goTo(8)"><span class="step-num">09</span>Auswertung</button>
+  <button class="step-tab" onclick="goTo(9)" style="border-left:1px solid var(--border);margin-left:8px;color:var(--yellow)"><span class="step-num">REF</span>⚡ Ports</button>
+</div>
+
+<div class="container">
+
+  <!-- SECTION 0: Was ist NAT -->
+  <div class="section active" id="s0">
+    <span class="section-label">Grundlagen</span>
+    <h2>Was ist NAT?</h2>
+    <p><strong>NAT</strong> steht für <strong>Network Address Translation</strong> – also die Übersetzung von IP-Adressen. Ein Router ändert dabei die Quell- oder Ziel-IP-Adresse eines Pakets, bevor er es weiterleitet.</p>
+
+    <div class="highlight-box">
+      <h3 style="margin-bottom:8px">💡 Das Kernproblem</h3>
+      <p style="margin-bottom:0">Im Internet gibt es nur <strong>~4,3 Milliarden IPv4-Adressen</strong> – viel zu wenig für alle Geräte weltweit. Deshalb gibt es <strong>private IP-Adressen</strong> (nur im lokalen Netz) und <strong>öffentliche IP-Adressen</strong> (im Internet). NAT ist die Brücke zwischen beiden Welten.</p>
+    </div>
+
+    <div class="card card-accent">
+      <h3>Private IP-Adressbereiche (RFC 1918)</h3>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2;">
+        <div><span class="accent">10.0.0.0/8</span> &nbsp;&nbsp;&nbsp;→ Class A privat (z.B. 10.0.0.1 – 10.255.255.254)</div>
+        <div><span class="accent">172.16.0.0/12</span> → Class B privat</div>
+        <div><span class="accent">192.168.0.0/16</span> → Class C privat</div>
+      </div>
+      <hr class="divider">
+      <p style="margin-bottom:0">Diese Adressen sind <strong>nicht im Internet routbar</strong>. Jedes Heimnetzwerk oder Firmennetz kann sie frei verwenden – ohne Konflikte mit anderen Netzen.</p>
+    </div>
+
+    <div class="card card-orange">
+      <h3>Wie funktioniert NAT grundsätzlich?</h3>
+      <div class="pipe-row">
+        <div class="pipe-node"><div class="n-label">Client (privat)</div><div class="n-ip">10.0.0.1</div></div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-node" style="border-color:var(--accent)"><div class="n-label">NAT-Router</div><div class="n-ip">ändert IP ↔</div></div>
+        <div class="pipe-arrow"></div>
+        <div class="pipe-node"><div class="n-label">Server (öffentlich)</div><div class="n-ip">12.7.51.9</div></div>
+      </div>
+      <p style="margin-top:14px;margin-bottom:0">Der Router tauscht die <strong>private Quelladresse</strong> gegen seine <strong>öffentliche IP</strong> aus. Nach außen sieht es so aus, als käme alles vom Router selbst.</p>
+    </div>
+
+    <ul class="steps-list" style="margin-top:4px">
+      <li><p><strong>Eingehend:</strong> Client schickt Paket mit privater IP (10.0.0.1) → Router ersetzt sie durch öffentliche IP</p></li>
+      <li><p><strong>Speicherung:</strong> Router merkt sich in einer <strong>NAT-Tabelle</strong>, welche private IP welchem ausgehenden Paket entspricht</p></li>
+      <li><p><strong>Antwort:</strong> Antwortpaket kommt zurück zur öffentlichen IP → Router schlägt in der Tabelle nach und schickt das Paket zur privaten IP weiter</p></li>
+    </ul>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" disabled>← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(1)">Weiter: Warum PAT? →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: Warum PAT -->
+  <div class="section" id="s1">
+    <span class="section-label">Grundlagen</span>
+    <h2>Von NAT zu PAT</h2>
+
+    <div class="highlight-box orange">
+      <h3 style="margin-bottom:8px;color:var(--accent2)">⚠️ Das Problem mit einfachem NAT</h3>
+      <p>Reines NAT (1:1) würde bedeuten: <strong>Ein Client = Eine öffentliche IP</strong>. Das löst das Adressproblem kaum. Was, wenn 50 Clients gleichzeitig surfen sollen und man nur <strong>eine</strong> öffentliche IP hat?</p>
+    </div>
+
+    <div class="card card-accent">
+      <h3>PAT = Port Address Translation</h3>
+      <p>PAT (auch <strong>NAT Overloading</strong> oder <strong>Masquerading</strong>) löst dies durch den Einsatz von <strong>Port-Nummern</strong>. Mehrere private IPs werden auf <strong>eine öffentliche IP</strong> abgebildet – aber jede Verbindung bekommt einen eigenen Port-Eintrag.</p>
+    </div>
+
+    <div class="card card-green">
+      <h3>Was sind Ports?</h3>
+      <p>Ports (1–65535) identifizieren <strong>Dienste und Verbindungen</strong> innerhalb eines Computers:</p>
+      <div style="font-family:var(--mono);font-size:12px;line-height:2.2">
+        <div>Port <span class="accent">80</span>  → HTTP (Webseiten, unverschlüsselt)</div>
+        <div>Port <span class="accent">443</span> → HTTPS (Webseiten, verschlüsselt)</div>
+        <div>Port <span class="accent">22</span>  → SSH (Fernwartung)</div>
+        <div>Port <span class="accent">53</span>  → DNS (Namensauflösung)</div>
+      </div>
+      <hr class="divider">
+      <p style="margin-bottom:0">Wenn dein Browser eine Verbindung aufbaut, wählt das Betriebssystem einen <strong>zufälligen Ephemeral-Port</strong> (>1024) als Quell-Port. Im Beispiel: <span class="mono accent">45123</span></p>
+    </div>
+
+    <div class="diagram-wrap">
+      <h3 style="margin-bottom:16px">PAT in Aktion – Zwei Clients, eine öffentliche IP</h3>
+      <table class="packet-table">
+        <tr><th colspan="2">Intern (privat)</th><th colspan="2">Extern (öffentlich)</th></tr>
+        <tr><th>Source</th><th>Destination</th><th>Source (nach NAT)</th><th>Destination</th></tr>
+        <tr>
+          <td class="tag-src">10.0.0.1:45123</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td class="tag-pub">86.14.30.2:10001</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+        </tr>
+        <tr>
+          <td class="tag-src">10.0.0.2:45123</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td class="tag-pub">86.14.30.2:10002</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+        </tr>
+      </table>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:0">Beide Clients haben zufällig den gleichen Quellport 45123 gewählt. Der Router löst den Konflikt durch <strong>unterschiedliche öffentliche Ports</strong>.</p>
+    </div>
+
+    <div class="highlight-box green">
+      <h3 style="margin-bottom:8px;color:var(--green)">✅ Vorteile von PAT</h3>
+      <ul style="color:#a8b4c8;line-height:2;padding-left:20px">
+        <li>Hunderte Clients teilen sich <strong>eine einzige öffentliche IP</strong></li>
+        <li>Private Netzwerk-Topologie bleibt <strong>von außen unsichtbar</strong></li>
+        <li><strong>Implizite Firewall</strong>: Unaufgeforderte eingehende Pakete werden geblockt</li>
+        <li>Standard in fast jedem Heimrouter (Fritz!Box, etc.)</li>
+      </ul>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(0)">← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Weiter: Das Prüfungsnetzwerk →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Netzwerk-Kontext -->
+  <div class="section" id="s2">
+    <span class="section-label">Prüfungsaufgabe · Kontext</span>
+    <h2>Das Netzwerk der IHK-Travel GmbH</h2>
+    <p>Bevor wir die Tabellen befüllen, schauen wir uns das <strong>Netzwerk der Zentrale</strong> an, aus dem die Aufgabe stammt.</p>
+
+    <div class="card card-accent">
+      <h3>LAN der Zentrale</h3>
+      <p>Das lokale Netzwerk der Zentrale verwendet den Adressbereich <span class="mono accent">10.0.0.0/10</span>. Darin befinden sich zwei User-PCs, die gleichzeitig eine Webseite im Internet aufrufen.</p>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2.2;margin-top:10px">
+        <div>🖥️ Client 1: <span class="accent">10.0.0.1</span></div>
+        <div>🖥️ Client 2: <span class="accent">10.0.0.2</span></div>
+        <div>🌐 Webserver: <span class="orange">12.7.51.9:443</span> (HTTPS)</div>
+      </div>
+    </div>
+
+    <div class="card card-orange">
+      <h3>Router Zentrale – Interfaces</h3>
+      <p>Laut Netzwerkplan hat der Router Zentrale folgende relevante Schnittstellen:</p>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2.2">
+        <div><span class="accent">eth0</span> → Internet (öffentliche IP: <span class="green-t">31.181.17.41</span> laut Router-Zentrale eth0)</div>
+        <div><span class="accent">eth1</span> → LAN (privates Netz 10.0.0.0/10)</div>
+      </div>
+      <p style="margin-top:12px;margin-bottom:0;font-size:13px">Die öffentliche IP des NAT-Routers der Zentrale ist in der Prüfungsaufgabe impliziert. Da die Clients <strong>10.0.0.x</strong> verwenden und der Router PAT macht, ersetzt er deren Adresse durch seine eigene WAN-IP.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <h3 style="margin-bottom:20px">Netzwerktopologie – Vereinfacht</h3>
+      <svg class="diagram-svg" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#00d4ff"/>
+          </marker>
+          <marker id="arrG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+          </marker>
+          <marker id="arrL" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse">
+            <polygon points="0 0, 8 3, 0 6" fill="#ff6b35"/>
+          </marker>
+        </defs>
+        <!-- Client Box -->
+        <rect x="10" y="60" width="130" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+        <text x="75" y="88" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">LAN (privat)</text>
+        <text x="75" y="106" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono">10.0.0.1</text>
+        <text x="75" y="122" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono">10.0.0.2</text>
+        <!-- Arrow 1: Client → Router -->
+        <line x1="142" y1="100" x2="258" y2="100" stroke="#00d4ff" stroke-width="2" marker-end="url(#arrR)" stroke-dasharray="4,3"/>
+        <text x="200" y="92" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">① intern</text>
+        <!-- NAT Router -->
+        <rect x="260" y="55" width="140" height="90" rx="8" fill="#111827" stroke="#00d4ff" stroke-width="2"/>
+        <text x="330" y="79" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">NAT-Router</text>
+        <text x="330" y="96" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">LAN: 10.0.0.x</text>
+        <text x="330" y="111" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">WAN: 31.101.17.41</text>
+        <text x="330" y="126" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">PAT-Tabelle</text>
+        <!-- Arrow 2: Router → Server -->
+        <line x1="402" y1="100" x2="518" y2="100" stroke="#10b981" stroke-width="2" marker-end="url(#arrG)" />
+        <text x="460" y="92" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">② extern</text>
+        <!-- Server -->
+        <rect x="520" y="60" width="160" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+        <text x="600" y="88" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">Server (Internet)</text>
+        <text x="600" y="108" fill="#ff6b35" font-size="12" text-anchor="middle" font-family="JetBrains Mono">12.7.51.9:443</text>
+        <!-- Connector lines down to return path -->
+        <line x1="75" y1="140" x2="75" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <line x1="330" y1="145" x2="330" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <line x1="600" y1="140" x2="600" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <!-- Arrow 3: Server → Router (return, going LEFT, arrowhead at left/end) -->
+        <line x1="520" y1="158" x2="404" y2="158" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="460" y="174" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">③ Antwort extern</text>
+        <!-- Arrow 4: Router → Client (return, going LEFT, arrowhead at left/end) -->
+        <line x1="258" y1="158" x2="143" y2="158" stroke="#ff6b35" stroke-width="1.5" marker-end="url(#arrL)"/>
+        <text x="200" y="174" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">④ Antwort intern</text>
+      </svg>
+    </div>
+
+    <div class="highlight-box">
+      <h3 style="margin-bottom:10px">📋 Die Prüfungsaufgabe im Überblick</h3>
+      <p>Es gibt <strong>4 Abschnitte</strong> (Messpunkte), die den Weg eines Pakets durch das Netzwerk zeigen:</p>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2.3">
+        <div><span class="accent">Abschnitt 1</span> → Im LAN: Client → NAT-Router (gegeben!)</div>
+        <div><span class="accent">Abschnitt 2</span> → Im Internet: NAT-Router → Server</div>
+        <div><span class="accent">Abschnitt 3</span> → Rückkehr: Server → NAT-Router</div>
+        <div><span class="accent">Abschnitt 4</span> → Rückkehr: NAT-Router → Client</div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(1)">← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Weiter: Abschnitt 1 → 2 →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Abschnitt 1→2 -->
+  <div class="section" id="s3">
+    <span class="section-label">NAT/PAT Schritt 1</span>
+    <h2>Abschnitt 1 → Abschnitt 2</h2>
+    <p>Die Pakete verlassen den LAN und werden vom NAT-Router ins Internet weitergeleitet. Hier passiert die <strong>Adressübersetzung</strong>.</p>
+
+    <div class="diagram-wrap">
+      <h3 style="margin-bottom:14px">Abschnitt 1: Was der LAN-Monitor sieht</h3>
+      <table class="packet-table">
+        <tr><th>Source (Quelle)</th><th>Destination (Ziel)</th></tr>
+        <tr><td class="tag-src">10.0.0.1:45123</td><td class="tag-dst">12.7.51.9:443</td></tr>
+        <tr><td class="tag-src">10.0.0.2:45123</td><td class="tag-dst">12.7.51.9:443</td></tr>
+      </table>
+    </div>
+
+    <div class="card card-accent">
+      <h3>Analyse: Quell-Ports</h3>
+      <p>Beide Clients haben zufällig denselben Ephemeral-Port <span class="mono accent">45123</span> gewählt. Das ist kein Fehler – das Betriebssystem wählt Ports zufällig aus dem Bereich 1024–65535.</p>
+      <p style="margin-bottom:0"><strong>Problem:</strong> Wenn der Router beide Pakete mit der gleichen öffentlichen IP weiterleitet und beide den Port 45123 nutzen – wie unterscheidet er dann die Antworten?</p>
+    </div>
+
+    <div class="card card-orange">
+      <h3>PAT-Lösung: Port-Remapping</h3>
+      <p>Der NAT/PAT-Router weist jedem ausgehenden Paket einen <strong>eindeutigen öffentlichen Port</strong> zu. Er führt dazu eine <strong>PAT-Tabelle</strong>:</p>
+      <table class="packet-table" style="margin-top:10px">
+        <tr><th>Privat (intern)</th><th>Öffentlich (extern)</th><th>Zweck</th></tr>
+        <tr>
+          <td class="tag-src">10.0.0.1:45123</td>
+          <td class="tag-pub">31.101.17.41:10001</td>
+          <td style="color:var(--muted);font-size:12px">Client 1 – HTTPS</td>
+        </tr>
+        <tr>
+          <td class="tag-src">10.0.0.2:45123</td>
+          <td class="tag-pub">31.101.17.41:10002</td>
+          <td style="color:var(--muted);font-size:12px">Client 2 – HTTPS</td>
+        </tr>
+      </table>
+      <p style="margin-top:14px;margin-bottom:0;font-size:13px">Die öffentlichen Ports 10001/10002 sind <strong>zufällig gewählt</strong> (Router-intern). Was zählt: Sie sind <strong>eindeutig</strong>.</p>
+    </div>
+
+    <div class="highlight-box green">
+      <h3 style="color:var(--green);margin-bottom:12px">✅ Abschnitt 2: Nach der NAT-Übersetzung (Lösung)</h3>
+      <table class="packet-table">
+        <tr><th>Source (öffentlich)</th><th>Destination</th></tr>
+        <tr><td class="tag-pub">31.101.17.41:10001</td><td class="tag-dst">12.7.51.9:443</td></tr>
+        <tr><td class="tag-pub">31.101.17.41:10002</td><td class="tag-dst">12.7.51.9:443</td></tr>
+      </table>
+      <p style="margin-bottom:0;font-size:13px;margin-top:10px">Der Server sieht: Zwei Verbindungen von der <strong>gleichen IP</strong>, aber <strong>verschiedenen Ports</strong>. Die privaten Adressen sind komplett verborgen.</p>
+    </div>
+
+    <div class="card" style="background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.3)">
+      <h3 style="color:var(--accent3)">🔑 Warum Port 443?</h3>
+      <p style="margin-bottom:0">Port <span class="mono" style="color:var(--accent3)">443</span> ist der Standard-Port für <strong>HTTPS</strong> (HyperText Transfer Protocol Secure). Die Aufgabe sagt „eine Webseite im Internet aufrufen" – moderne Webseiten nutzen fast immer HTTPS. Deshalb ist das Ziel <span class="mono orange">12.7.51.9:443</span>.</p>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(2)">← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Weiter: Abschnitt 2 → 3 →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Abschnitt 2→3 -->
+  <div class="section" id="s4">
+    <span class="section-label">NAT/PAT Schritt 2</span>
+    <h2>Abschnitt 3: Die Antwort des Servers</h2>
+    <p>Der Server im Internet hat die Anfragen empfangen und sendet nun seine <strong>Antwortpakete</strong> zurück. Welche Adressen stehen drin?</p>
+
+    <div class="highlight-box">
+      <h3 style="margin-bottom:10px">💡 Logik der Umkehrung</h3>
+      <p style="margin-bottom:0">In der Netzwerkommunikation gilt: Was in Abschnitt 2 die <strong>Source</strong> war, wird in Abschnitt 3 die <strong>Destination</strong> – und umgekehrt. Der Server antwortet einfach zurück an die Adresse, von der er die Anfrage erhalten hat.</p>
+    </div>
+
+    <div class="card card-accent">
+      <h3>Was der Server weiß</h3>
+      <p>Der Server hat zwei Pakete erhalten, beide von:</p>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2.2">
+        <div>Paket 1: von <span class="green-t">31.101.17.41:10001</span></div>
+        <div>Paket 2: von <span class="green-t">31.101.17.41:10002</span></div>
+      </div>
+      <p style="margin-top:12px;margin-bottom:0">Der Server weiß <strong>nichts</strong> von 10.0.0.1 oder 10.0.0.2. Er antwortet an die öffentliche IP mit den entsprechenden Ports.</p>
+    </div>
+
+    <div class="highlight-box green">
+      <h3 style="color:var(--green);margin-bottom:12px">✅ Abschnitt 3: Antwort vom Server (Lösung)</h3>
+      <table class="packet-table">
+        <tr><th>Source (Server)</th><th>Destination (zum Router)</th></tr>
+        <tr><td class="tag-dst">12.7.51.9:443</td><td class="tag-pub">31.101.17.41:10001</td></tr>
+        <tr><td class="tag-dst">12.7.51.9:443</td><td class="tag-pub">31.101.17.41:10002</td></tr>
+      </table>
+    </div>
+
+    <div class="card card-orange">
+      <h3>Warum antwortet der Server auf Port 443?</h3>
+      <p>Der Server-Prozess (z.B. ein Webserver) <strong>lauscht</strong> auf Port 443. Die Antwort kommt also von <span class="mono orange">12.7.51.9:443</span> – das ist der <strong>Source-Port der Antwort</strong>.</p>
+      <p style="margin-bottom:0">Das ist wichtig: Port 443 wechselt hier von <em>Destination</em> (in Abschnitt 2) zu <em>Source</em> (in Abschnitt 3).</p>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(3)">← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(5)">Weiter: Abschnitt 3 → 4 →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Abschnitt 3→4 -->
+  <div class="section" id="s5">
+    <span class="section-label">NAT/PAT Schritt 3</span>
+    <h2>Abschnitt 4: Rückkehr ins LAN</h2>
+    <p>Die Antwortpakete kommen beim NAT-Router an. Jetzt muss er sie an die <strong>richtigen Clients</strong> im LAN weiterleiten.</p>
+
+    <div class="card card-accent">
+      <h3>Der Router schlägt nach</h3>
+      <p>Der Router empfängt Pakete für <span class="mono green-t">31.101.17.41:10001</span> und <span class="mono green-t">31.101.17.41:10002</span>. Er schaut in seiner PAT-Tabelle nach:</p>
+      <table class="packet-table" style="margin-top:10px">
+        <tr><th>Öffentl. Port</th><th>→ Private IP:Port</th></tr>
+        <tr><td class="tag-pub">31.101.17.41:10001</td><td class="tag-src">10.0.0.1:45123</td></tr>
+        <tr><td class="tag-pub">31.101.17.41:10002</td><td class="tag-src">10.0.0.2:45123</td></tr>
+      </table>
+      <p style="margin-top:12px;margin-bottom:0">Er tauscht Destination gegen die private IP:Port aus – und leitet das Paket weiter.</p>
+    </div>
+
+    <div class="highlight-box green">
+      <h3 style="color:var(--green);margin-bottom:12px">✅ Abschnitt 4: Im LAN (Lösung)</h3>
+      <table class="packet-table">
+        <tr><th>Source (Server)</th><th>Destination (Client)</th></tr>
+        <tr><td class="tag-dst">12.7.51.9:443</td><td class="tag-src">10.0.0.1:45123</td></tr>
+        <tr><td class="tag-dst">12.7.51.9:443</td><td class="tag-src">10.0.0.2:45123</td></tr>
+      </table>
+      <p style="margin-top:12px;margin-bottom:0;font-size:13px">Jetzt sieht im LAN jeder Client seine eigene Adresse als Ziel – als hätte der Server direkt mit ihm gesprochen.</p>
+    </div>
+
+    <div class="card card-orange">
+      <h3>Vollständige PAT-Übersicht – alle 4 Abschnitte</h3>
+      <table class="packet-table" style="margin-top:10px">
+        <tr><th>Abschnitt</th><th>Source</th><th>Destination</th><th>Bemerkung</th></tr>
+        <tr>
+          <td style="color:var(--accent)">① LAN→Router</td>
+          <td class="tag-src">10.0.0.1:45123<br>10.0.0.2:45123</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td style="font-size:11px;color:var(--muted)">gegeben, privat</td>
+        </tr>
+        <tr>
+          <td style="color:var(--green)">② Router→Server</td>
+          <td class="tag-pub">31.101.17.41:10001<br>31.101.17.41:10002</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td style="font-size:11px;color:var(--muted)">nach PAT, öffentlich</td>
+        </tr>
+        <tr>
+          <td style="color:var(--yellow)">③ Server→Router</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td class="tag-pub">31.101.17.41:10001<br>31.101.17.41:10002</td>
+          <td style="font-size:11px;color:var(--muted)">Antwort, umgekehrt</td>
+        </tr>
+        <tr>
+          <td style="color:var(--accent2)">④ Router→LAN</td>
+          <td class="tag-dst">12.7.51.9:443</td>
+          <td class="tag-src">10.0.0.1:45123<br>10.0.0.2:45123</td>
+          <td style="font-size:11px;color:var(--muted)">zurück-übersetzt</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(4)">← Zurück</button>
+      <button class="btn btn-primary" onclick="goTo(6)">Weiter: Übung →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 6: FILL-IN QUIZ -->
+  <div class="section" id="s6">
+    <span class="section-label">Übung</span>
+    <h2>Tabellen ausfüllen</h2>
+    <p>Fülle die fehlenden Felder aus – genau wie in der Prüfung. Das Diagramm und die Informationen unten helfen dir dabei.</p>
+
+    <!-- ABSCHNITT DIAGRAM -->
+    <div class="diagram-wrap" style="margin-bottom:24px">
+      <svg style="width:100%;max-width:720px;height:auto" viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="dR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0,8 3,0 6" fill="#00d4ff"/>
+          </marker>
+          <marker id="dG" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0,8 3,0 6" fill="#10b981"/>
+          </marker>
+          <marker id="dL" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse">
+            <polygon points="0 0,8 3,0 6" fill="#ff6b35"/>
+          </marker>
+        </defs>
+        <!-- Client box -->
+        <rect x="8" y="50" width="130" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+        <text x="73" y="78" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">LAN (privat)</text>
+        <text x="73" y="96" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono">10.0.0.1</text>
+        <text x="73" y="112" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono">10.0.0.2</text>
+        <!-- Arrow 1: Client → Router -->
+        <line x1="140" y1="82" x2="272" y2="82" stroke="#00d4ff" stroke-width="2" marker-end="url(#dR)" stroke-dasharray="5,3"/>
+        <rect x="168" y="56" width="68" height="20" rx="10" fill="#00d4ff" opacity="0.12"/>
+        <rect x="168" y="56" width="68" height="20" rx="10" fill="none" stroke="#00d4ff" stroke-width="1"/>
+        <text x="202" y="70" fill="#00d4ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">① intern</text>
+        <!-- NAT Router box -->
+        <rect x="274" y="40" width="164" height="100" rx="8" fill="#111827" stroke="#00d4ff" stroke-width="2"/>
+        <text x="356" y="66" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">NAT-Router</text>
+        <text x="356" y="83" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">LAN: 10.0.0.x</text>
+        <text x="356" y="98" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">WAN: 31.101.17.41</text>
+        <text x="356" y="113" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">PAT-Tabelle</text>
+        <text x="356" y="128" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">↕ übersetzt Adressen</text>
+        <!-- Arrow 2: Router → Server -->
+        <line x1="440" y1="82" x2="568" y2="82" stroke="#10b981" stroke-width="2" marker-end="url(#dG)"/>
+        <rect x="468" y="56" width="68" height="20" rx="10" fill="#10b981" opacity="0.12"/>
+        <rect x="468" y="56" width="68" height="20" rx="10" fill="none" stroke="#10b981" stroke-width="1"/>
+        <text x="502" y="70" fill="#10b981" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">② extern</text>
+        <!-- Server box -->
+        <rect x="570" y="50" width="140" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+        <text x="640" y="78" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">Server (Internet)</text>
+        <text x="640" y="98" fill="#ff6b35" font-size="12" text-anchor="middle" font-family="JetBrains Mono">12.7.51.9:443</text>
+        <!-- Drop-down connectors -->
+        <line x1="73" y1="130" x2="73" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <line x1="356" y1="140" x2="356" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <line x1="640" y1="130" x2="640" y2="158" stroke="#1f2d47" stroke-width="1"/>
+        <!-- Arrow 3: Server → Router (LEFT) -->
+        <line x1="638" y1="158" x2="442" y2="158" stroke="#ff6b35" stroke-width="2" marker-end="url(#dL)"/>
+        <rect x="504" y="163" width="68" height="20" rx="10" fill="#ff6b35" opacity="0.12"/>
+        <rect x="504" y="163" width="68" height="20" rx="10" fill="none" stroke="#ff6b35" stroke-width="1"/>
+        <text x="538" y="177" fill="#ff6b35" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">③ extern</text>
+        <!-- Arrow 4: Router → Client (LEFT) -->
+        <line x1="272" y1="158" x2="77" y2="158" stroke="#ff6b35" stroke-width="2" marker-end="url(#dL)"/>
+        <rect x="148" y="163" width="68" height="20" rx="10" fill="#ff6b35" opacity="0.12"/>
+        <rect x="148" y="163" width="68" height="20" rx="10" fill="none" stroke="#ff6b35" stroke-width="1"/>
+        <text x="182" y="177" fill="#ff6b35" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">④ intern</text>
+        <!-- Legend -->
+        <line x1="8" y1="200" x2="30" y2="200" stroke="#00d4ff" stroke-width="2" stroke-dasharray="4,2"/>
+        <text x="35" y="204" fill="#64748b" font-size="9" font-family="JetBrains Mono">Anfrage</text>
+        <line x1="88" y1="200" x2="110" y2="200" stroke="#ff6b35" stroke-width="2"/>
+        <text x="115" y="204" fill="#64748b" font-size="9" font-family="JetBrains Mono">Antwort</text>
+      </svg>
+    </div>
+
+    <!-- CONTEXT BOX -->
+    <div class="card card-accent" style="margin-bottom:24px">
+      <h3>📋 Gegebene Informationen</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px">
+        <div style="font-family:var(--mono);font-size:12px;line-height:2.1">
+          <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Clients (privat)</div>
+          <div>🖥️ Client 1: <span class="accent">10.0.0.1</span></div>
+          <div>🖥️ Client 2: <span class="accent">10.0.0.2</span></div>
+          <div>🔌 Quellport (zufällig): <span class="accent">45123</span></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:12px;line-height:2.1">
+          <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Netzwerk</div>
+          <div>🌐 Webserver: <span class="orange">12.7.51.9:443</span></div>
+          <div>🔁 Router WAN-IP: <span class="green-t">31.101.17.41</span></div>
+          <div>🔀 PAT-Ports: <span class="green-t">45123</span> / <span class="green-t">45124</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(0,212,255,0.06);border-radius:8px;font-size:12px;font-family:var(--mono);line-height:1.8">
+        <span style="color:var(--muted)">Hinweis:</span> Der Router vergibt beim PAT neue öffentliche Ports für jede Verbindung.<br>
+        Client 1 (10.0.0.1:45123) → öffentlich <span class="green-t">31.101.17.41:45123</span> &nbsp;|&nbsp; Client 2 (10.0.0.2:45123) → öffentlich <span class="green-t">31.101.17.41:45124</span>
+      </div>
+    </div>
+
+    <!-- ABSCHNITT 1 (gegeben, read-only) -->
+    <div class="card" style="margin-bottom:16px;border-left:3px solid var(--muted)">
+      <h3 style="color:var(--muted);margin-bottom:14px">Abschnitt 1 – LAN → Router (bereits gegeben)</h3>
+      <table class="fill-table">
+        <tr><th>Source</th><th>Destination</th></tr>
+        <tr>
+          <td><span class="fill-given" style="display:block;padding:7px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">10.0.0.1:45123</span></td>
+          <td><span class="fill-given" style="display:block;padding:7px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">12.7.51.9:443</span></td>
+        </tr>
+        <tr>
+          <td><span class="fill-given" style="display:block;padding:7px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">10.0.0.2:45123</span></td>
+          <td><span class="fill-given" style="display:block;padding:7px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">12.7.51.9:443</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ABSCHNITT 2 -->
+    <div class="card" style="margin-bottom:16px">
+      <h3 style="margin-bottom:14px">Abschnitt 2 – Router → Internet <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+      <table class="fill-table">
+        <tr><th>Source</th><th>Destination</th></tr>
+        <tr>
+          <td><input class="fill-input" id="f2a_src" placeholder="IP:Port eingeben..." data-answer="31.101.17.41:45123"></td>
+          <td><input class="fill-input" id="f2a_dst" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+        </tr>
+        <tr>
+          <td><input class="fill-input" id="f2b_src" placeholder="IP:Port eingeben..." data-answer="31.101.17.41:45124"></td>
+          <td><input class="fill-input" id="f2b_dst" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ABSCHNITT 3 -->
+    <div class="card" style="margin-bottom:16px">
+      <h3 style="margin-bottom:14px">Abschnitt 3 – Internet → Router (Antwort) <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+      <table class="fill-table">
+        <tr><th>Source</th><th>Destination</th></tr>
+        <tr>
+          <td><input class="fill-input" id="f3a_src" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+          <td><input class="fill-input" id="f3a_dst" placeholder="IP:Port eingeben..." data-answer="31.101.17.41:45123"></td>
+        </tr>
+        <tr>
+          <td><input class="fill-input" id="f3b_src" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+          <td><input class="fill-input" id="f3b_dst" placeholder="IP:Port eingeben..." data-answer="31.101.17.41:45124"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- ABSCHNITT 4 -->
+    <div class="card" style="margin-bottom:24px">
+      <h3 style="margin-bottom:14px">Abschnitt 4 – Router → LAN (Antwort zurück) <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+      <table class="fill-table">
+        <tr><th>Source</th><th>Destination</th></tr>
+        <tr>
+          <td><input class="fill-input" id="f4a_src" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+          <td><input class="fill-input" id="f4a_dst" placeholder="IP:Port eingeben..." data-answer="10.0.0.1:45123"></td>
+        </tr>
+        <tr>
+          <td><input class="fill-input" id="f4b_src" placeholder="IP:Port eingeben..." data-answer="12.7.51.9:443"></td>
+          <td><input class="fill-input" id="f4b_dst" placeholder="IP:Port eingeben..." data-answer="10.0.0.2:45123"></td>
+        </tr>
+      </table>
+    </div>
+
+    <div id="fill-feedback" style="display:none;padding:16px;border-radius:10px;margin-bottom:16px;font-family:var(--mono);font-size:13px"></div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="checkFill()">Antworten prüfen ✓</button>
+      <button class="btn btn-outline" onclick="showFillSolution()">Lösung anzeigen</button>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(5)">← Zurück</button>
+      <button class="btn btn-primary" id="fill-next-btn" onclick="goTo(7)" style="display:none">Weiter: Wissenstest →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 7: QUIZ -->
+  <div class="section" id="s7">
+    <span class="section-label">Wissenstest</span>
+    <h2>Multiple-Choice Quiz</h2>
+    <p>Teste dein Verständnis mit diesen 6 Fragen. Jede richtige Antwort gibt einen Punkt.</p>
+
+    <div class="quiz-section" id="quizContainer">
+
+      <div class="quiz-question" id="q0">
+        <div class="q-text">1. Wofür steht PAT und was unterscheidet es von einfachem NAT?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(0,0,false)">PAT steht für Port Address Table – es verwaltet Routing-Tabellen</button>
+          <button class="quiz-option" onclick="answer(0,1,true)">PAT steht für Port Address Translation – mehrere private IPs teilen sich eine öffentliche IP durch Port-Unterscheidung</button>
+          <button class="quiz-option" onclick="answer(0,2,false)">PAT ist identisch mit NAT, nur mit anderem Namen</button>
+          <button class="quiz-option" onclick="answer(0,3,false)">PAT steht für Packet Analysis Tool und ist ein Diagnose-Werkzeug</button>
+        </div>
+        <div class="quiz-feedback" id="fb0"></div>
+      </div>
+
+      <div class="quiz-question" id="q1">
+        <div class="q-text">2. Warum sind in Abschnitt 1 beide Clients mit Port 45123 eingetragen?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(1,0,false)">Das ist ein Konfigurationsfehler im Netzwerk</button>
+          <button class="quiz-option" onclick="answer(1,1,false)">Port 45123 ist der Standard-Port für HTTPS</button>
+          <button class="quiz-option" onclick="answer(1,2,true)">Das Betriebssystem wählt Ephemeral-Ports zufällig – es ist Zufall, dass beide denselben gewählt haben</button>
+          <button class="quiz-option" onclick="answer(1,3,false)">Beide Clients nutzen dieselbe Verbindung (gleiche Session)</button>
+        </div>
+        <div class="quiz-feedback" id="fb1"></div>
+      </div>
+
+      <div class="quiz-question" id="q2">
+        <div class="q-text">3. In Abschnitt 2 (nach der NAT-Übersetzung): Was hat sich im Paket geändert?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(2,0,false)">Die Destination-Adresse wurde geändert</button>
+          <button class="quiz-option" onclick="answer(2,1,true)">Die Source-IP wurde von privat auf öffentlich geändert und der Quell-Port wurde vom Router neu vergeben</button>
+          <button class="quiz-option" onclick="answer(2,2,false)">Das gesamte Paket wurde neu verschlüsselt</button>
+          <button class="quiz-option" onclick="answer(2,3,false)">Nichts ändert sich – der Router leitet unverändert weiter</button>
+        </div>
+        <div class="quiz-feedback" id="fb2"></div>
+      </div>
+
+      <div class="quiz-question" id="q3">
+        <div class="q-text">4. Wozu dient die PAT-Tabelle im Router?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(3,0,false)">Sie speichert die Zugangsdaten der Clients</button>
+          <button class="quiz-option" onclick="answer(3,1,false)">Sie speichert alle Webseiten-Inhalte als Cache</button>
+          <button class="quiz-option" onclick="answer(3,2,true)">Sie ordnet öffentliche Port-Nummern den privaten IP:Port-Kombinationen zu, damit Antwortpakete korrekt weitergeleitet werden</button>
+          <button class="quiz-option" onclick="answer(3,3,false)">Sie ist eine Firewall-Tabelle für erlaubte Verbindungen</button>
+        </div>
+        <div class="quiz-feedback" id="fb3"></div>
+      </div>
+
+      <div class="quiz-question" id="q4">
+        <div class="q-text">5. In Abschnitt 3 (Antwort des Servers): Welche Adresse steht als Source?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(4,0,false)">Die private IP des Clients (10.0.0.1)</button>
+          <button class="quiz-option" onclick="answer(4,1,false)">Die öffentliche IP des NAT-Routers</button>
+          <button class="quiz-option" onclick="answer(4,2,true)">Die IP des Webservers mit Port 443 (12.7.51.9:443)</button>
+          <button class="quiz-option" onclick="answer(4,3,false)">Eine neue, zufällige IP-Adresse</button>
+        </div>
+        <div class="quiz-feedback" id="fb4"></div>
+      </div>
+
+      <div class="quiz-question" id="q5">
+        <div class="q-text">6. Was ist der Hauptvorteil von PAT gegenüber dem Betrieb ohne NAT?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answer(5,0,false)">PAT macht das Netzwerk schneller durch Kompression</button>
+          <button class="quiz-option" onclick="answer(5,1,true)">PAT ermöglicht, dass viele Geräte mit privaten IPs über eine einzige öffentliche IP kommunizieren – spart öffentliche IPv4-Adressen</button>
+          <button class="quiz-option" onclick="answer(5,2,false)">PAT verschlüsselt automatisch allen Netzwerkverkehr</button>
+          <button class="quiz-option" onclick="answer(5,3,false)">PAT ersetzt das DHCP-Protokoll für IP-Vergabe</button>
+        </div>
+        <div class="quiz-feedback" id="fb5"></div>
+      </div>
+
+    </div>
+
+    <div id="quiz-score-bar" style="display:none;margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-family:var(--mono)">
+      <div id="quiz-score-text"></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(6)">← Zurück</button>
+      <button class="btn btn-primary" id="quiz-next-btn" onclick="finishAndGoResult()" style="display:none">Auswertung anzeigen →</button>
+    </div>
+  </div>
+
+  <!-- SECTION 8: RESULT -->
+  <div class="section" id="s8">
+    <span class="section-label">Auswertung</span>
+    <h2>Ergebnis</h2>
+
+    <div class="score-display">
+      <div class="score-circle" id="scoreCircle">
+        <div class="score-num" id="scoreNum">-</div>
+        <div class="score-sub" id="scoreSub">Punkte</div>
+      </div>
+      <div id="scoreMsgEl" style="color:var(--muted);font-size:1rem;margin-bottom:32px"></div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">NAT = ?</div>
+        <div class="value">Network Address Translation</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">PAT = ?</div>
+        <div class="value">Port Address Translation</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Abschnitt 1 → Source</div>
+        <div class="value" style="color:var(--accent)">10.0.0.1:45123 / 10.0.0.2:45123</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Abschnitt 2 → Source</div>
+        <div class="value" style="color:var(--green)">31.101.17.41:45123 / :45124</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Abschnitt 3 → Destination</div>
+        <div class="value" style="color:var(--accent2)">31.101.17.41:45123 / :45124</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">Abschnitt 4 → Destination</div>
+        <div class="value" style="color:var(--accent)">10.0.0.1:45123 / 10.0.0.2:45123</div>
+      </div>
+    </div>
+
+    <div class="card card-green">
+      <h3>NAT/PAT-Prozess in 4 Sätzen erklärt</h3>
+      <ol style="padding-left:20px;line-height:2.2;color:#a8b4c8">
+        <li>Ein Client im privaten Netz sendet ein Paket mit seiner <strong>privaten IP und einem zufälligen Quellport</strong> an den Server.</li>
+        <li>Der NAT/PAT-Router tauscht die private Quelladresse gegen seine <strong>öffentliche IP und einen eindeutigen Port</strong> aus und merkt sich die Zuordnung in seiner PAT-Tabelle.</li>
+        <li>Der Server antwortet an die öffentliche IP:Port des Routers – der Router schlägt in seiner Tabelle nach.</li>
+        <li>Der Router leitet das Antwortpaket an den richtigen privaten Client weiter und stellt so die <strong>korrekte Zustellung</strong> sicher.</li>
+      </ol>
+    </div>
+
+    <div style="text-align:center;margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="restart()">🔄 Neu starten</button>
+      <button class="btn btn-outline" onclick="goTo(0)">📖 Zurück zu Grundlagen</button>
+    </div>
+  </div>
+
+  <!-- SECTION 9: PORT REFERENZ -->
+  <div class="section" id="s9">
+    <span class="section-label">Referenz</span>
+    <h2>Port-Bereiche</h2>
+    <p>Ports sind 16-Bit-Zahlen (0–65535) und in drei offizielle Bereiche eingeteilt. Für NAT/PAT sind besonders <strong>Well-Known Ports</strong> (Zielport des Servers) und <strong>Ephemeral Ports</strong> (Quellport des Clients) relevant.</p>
+
+    <div class="card card-accent" style="margin-bottom:0">
+      <table class="packet-table" style="margin-bottom:0">
+        <tr>
+          <th>Bereich</th>
+          <th>Ports</th>
+          <th>Bezeichnung</th>
+          <th>Beispiele</th>
+        </tr>
+        <tr>
+          <td style="color:var(--accent);font-weight:600">Well-Known</td>
+          <td style="font-family:var(--mono)">0 – 1023</td>
+          <td>Standarddienste, von IANA fest vergeben</td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">80 HTTP · 443 HTTPS · 22 SSH · 53 DNS · 25 SMTP</td>
+        </tr>
+        <tr>
+          <td style="color:var(--yellow);font-weight:600">Registered</td>
+          <td style="font-family:var(--mono)">1024 – 49151</td>
+          <td>Bekannte Anwendungen, registriert bei IANA</td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">3306 MySQL · 5432 PostgreSQL · 8080 HTTP-Alt</td>
+        </tr>
+        <tr style="background:rgba(16,185,129,0.04)">
+          <td style="color:var(--green);font-weight:600">Ephemeral<br><span style="font-size:11px;color:var(--muted);font-weight:400">Windows</span></td>
+          <td style="font-family:var(--mono)">49152 – 65535</td>
+          <td>Dynamisch, vom OS für ausgehende Verbindungen zufällig gewählt (IANA-Standard)</td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">Windows Vista+<br>macOS</td>
+        </tr>
+        <tr style="background:rgba(16,185,129,0.04)">
+          <td style="color:var(--green);font-weight:600">Ephemeral<br><span style="font-size:11px;color:var(--muted);font-weight:400">Linux</span></td>
+          <td style="font-family:var(--mono)">32768 – 60999</td>
+          <td>Dynamisch, konfigurierbar über<br><span style="font-family:var(--mono);font-size:11px">/proc/sys/net/ipv4/ip_local_port_range</span></td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">Linux (Standard)<br>z.B. Ubuntu, Debian</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="highlight-box" style="margin-top:20px">
+      <h3 style="margin-bottom:10px">🔎 Relevanz für die Prüfungsaufgabe</h3>
+      <div style="font-family:var(--mono);font-size:13px;line-height:2.2">
+        <div><span class="accent">Port 443</span> → Well-Known · Zielport des HTTPS-Webservers (12.7.51.9)</div>
+        <div><span class="green-t">Port 45123</span> → Ephemeral · Quellport der Clients, zufällig vom OS gewählt</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:6px">Hinweis: Port 45123 liegt im Linux-Ephemeral-Bereich (32768–60999), nicht im Windows-Bereich (49152–65535). Für die IHK-Prüfung gilt: jeder Port &gt;1023, der zufällig vom OS vergeben wird, ist ein Ephemeral Port.</div>
+      </div>
+    </div>
+
+    <div class="highlight-box orange" style="margin-top:0">
+      <h3 style="margin-bottom:10px;color:var(--accent2)">⚠️ Warum können zwei Clients denselben Ephemeral Port wählen?</h3>
+      <p style="margin-bottom:0">Ephemeral Ports werden <strong>pro Gerät</strong> vergeben – jedes Betriebssystem verwaltet seinen eigenen Port-Pool unabhängig. Es ist also völlig normal, dass Client 1 und Client 2 zufällig denselben Port <span class="mono accent">45123</span> wählen. Der NAT/PAT-Router erkennt den Konflikt und löst ihn durch Zuweisung unterschiedlicher öffentlicher Ports.</p>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn btn-outline" onclick="goTo(previousStep)">← Zurück</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  let currentStep = 0;
+  let previousStep = 0;
+  let quizScore = 0;
+  let quizAnswered = 0;
+  let fillDone = false;
+  const totalQuizQ = 6;
+  const feedbacks = [
+    "Richtig! PAT nutzt Port-Nummern, um viele private Verbindungen über eine öffentliche IP zu bündeln.",
+    "Korrekt! Ephemeral-Ports werden zufällig gewählt – Kollisionen sind normal und werden vom Router aufgelöst.",
+    "Genau! Der Router ändert Source-IP (privat → öffentlich) und vergibt einen neuen Quellport.",
+    "Richtig! Die PAT-Tabelle ist der Schlüssel – ohne sie könnte der Router Antwortpakete nicht zuordnen.",
+    "Korrekt! Der Server antwortet von 12.7.51.9:443 – Port 443 ist der HTTPS-Standard-Port.",
+    "Richtig! PAT löst den IPv4-Adressmangel, indem viele Geräte eine öffentliche IP teilen."
+  ];
+  const wrongFeedbacks = [
+    "Nicht ganz. PAT = Port Address Translation – die Ports identifizieren die einzelnen Verbindungen.",
+    "Nicht korrekt. Port 45123 ist ein zufälliger Ephemeral-Port, kein Standard-Port. Kollisionen sind möglich und normal.",
+    "Falsch. Nur die Source-Adresse wird geändert – die Destination bleibt gleich (12.7.51.9:443).",
+    "Leider falsch. Die PAT-Tabelle ordnet öffentliche Ports den privaten IP:Port-Kombinationen zu.",
+    "Nicht korrekt. Der Client sendet nicht direkt zurück. Abschnitt 3 zeigt den Server als Source.",
+    "Falsch. PAT hat keine Kompressions- oder Verschlüsselungsfunktion."
+  ];
+
+  function goTo(n) {
+    document.getElementById('s' + currentStep).classList.remove('active');
+    document.querySelectorAll('.step-tab')[currentStep].classList.remove('active');
+    if (currentStep < n && n < 9) document.querySelectorAll('.step-tab')[currentStep].classList.add('done');
+    previousStep = currentStep;
+    currentStep = n;
+    document.getElementById('s' + currentStep).classList.add('active');
+    document.querySelectorAll('.step-tab')[currentStep].classList.add('active');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function answer(qIdx, optIdx, isCorrect) {
+    const qEl = document.getElementById('q' + qIdx);
+    if (qEl.classList.contains('answered')) return;
+    qEl.classList.add('answered');
+
+    const opts = qEl.querySelectorAll('.quiz-option');
+    opts.forEach(o => o.classList.add('answered'));
+    opts[optIdx].classList.add(isCorrect ? 'correct' : 'wrong');
+
+    // highlight correct if wrong selected
+    if (!isCorrect) {
+      opts.forEach((o, i) => {
+        if (o.onclick && o.onclick.toString().includes('true')) o.classList.add('correct');
+      });
+      // easier: find correct by re-checking
+    }
+
+    const fb = document.getElementById('fb' + qIdx);
+    fb.classList.add('show');
+    if (isCorrect) {
+      quizScore++;
+      fb.className = 'quiz-feedback show ok';
+      fb.textContent = '✓ ' + feedbacks[qIdx];
+    } else {
+      fb.className = 'quiz-feedback show err';
+      fb.textContent = '✗ ' + wrongFeedbacks[qIdx];
+    }
+
+    quizAnswered++;
+    if (quizAnswered === totalQuizQ) {
+      const bar = document.getElementById('quiz-score-bar');
+      bar.style.display = 'block';
+      document.getElementById('quiz-score-text').innerHTML =
+        `Du hast <span style="color:var(--accent);font-size:1.2em">${quizScore}/${totalQuizQ}</span> richtig beantwortet.`;
+      document.getElementById('quiz-next-btn').style.display = 'inline-flex';
+    }
+  }
+
+  function checkFill() {
+    const inputs = document.querySelectorAll('.fill-input');
+    let allCorrect = true;
+    let correct = 0;
+
+    inputs.forEach(inp => {
+      const val = inp.value.trim().toLowerCase().replace(/\s/g,'');
+      const ans = inp.dataset.answer.toLowerCase().replace(/\s/g,'');
+      const ok = val === ans;
+
+      inp.classList.remove('correct','wrong');
+      if (ok) { inp.classList.add('correct'); correct++; }
+      else { inp.classList.add('wrong'); allCorrect = false; }
+    });
+
+    const fb = document.getElementById('fill-feedback');
+    fb.style.display = 'block';
+    if (allCorrect) {
+      fb.style.background = 'rgba(16,185,129,0.1)';
+      fb.style.border = '1px solid rgba(16,185,129,0.3)';
+      fb.style.color = 'var(--green)';
+      fb.textContent = `✓ Perfekt! Alle ${correct} Felder korrekt ausgefüllt. Du hast den NAT/PAT-Prozess verstanden!`;
+      document.getElementById('fill-next-btn').style.display = 'inline-flex';
+      fillDone = true;
+    } else {
+      fb.style.background = 'rgba(239,68,68,0.1)';
+      fb.style.border = '1px solid rgba(239,68,68,0.3)';
+      fb.style.color = '#fca5a5';
+      fb.textContent = `${correct}/${inputs.length} Felder korrekt. Prüfe die rot markierten Felder – nutze die Infos aus dem Kontext-Kasten oben.`;
+    }
+  }
+
+  function showFillSolution() {
+    const solutions = {
+      'f2a_src': '31.101.17.41:45123', 'f2a_dst': '12.7.51.9:443',
+      'f2b_src': '31.101.17.41:45124', 'f2b_dst': '12.7.51.9:443',
+      'f3a_src': '12.7.51.9:443',      'f3a_dst': '31.101.17.41:45123',
+      'f3b_src': '12.7.51.9:443',      'f3b_dst': '31.101.17.41:45124',
+      'f4a_src': '12.7.51.9:443',      'f4a_dst': '10.0.0.1:45123',
+      'f4b_src': '12.7.51.9:443',      'f4b_dst': '10.0.0.2:45123',
+    };
+    Object.entries(solutions).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      el.value = val;
+      el.classList.add('correct');
+    });
+    document.getElementById('fill-next-btn').style.display = 'inline-flex';
+  }
+
+  function finishAndGoResult() {
+    const scoreCircle = document.getElementById('scoreCircle');
+    const scoreNum = document.getElementById('scoreNum');
+    const scoreSub = document.getElementById('scoreSub');
+    const scoreMsg = document.getElementById('scoreMsgEl');
+
+    scoreNum.textContent = quizScore;
+    scoreSub.textContent = `von ${totalQuizQ} Punkten`;
+
+    const pct = quizScore / totalQuizQ;
+    if (pct >= 0.85) {
+      scoreCircle.style.borderColor = 'var(--green)';
+      scoreCircle.style.background = 'rgba(16,185,129,0.08)';
+      scoreNum.style.color = 'var(--green)';
+      scoreMsg.textContent = '🎉 Ausgezeichnet! Du beherrschst NAT/PAT – IHK-reif!';
+    } else if (pct >= 0.6) {
+      scoreCircle.style.borderColor = 'var(--yellow)';
+      scoreCircle.style.background = 'rgba(245,158,11,0.08)';
+      scoreNum.style.color = 'var(--yellow)';
+      scoreMsg.textContent = '👍 Gut! Ein paar Punkte noch – dann läuft es perfekt.';
+    } else {
+      scoreCircle.style.borderColor = 'var(--red)';
+      scoreCircle.style.background = 'rgba(239,68,68,0.08)';
+      scoreNum.style.color = 'var(--red)';
+      scoreMsg.textContent = '📚 Noch etwas üben! Geh die Abschnitte nochmal durch.';
+    }
+
+    goTo(8);
+  }
+
+  function restart() {
+    quizScore = 0;
+    quizAnswered = 0;
+    fillDone = false;
+
+    // reset quiz
+    for (let i = 0; i < totalQuizQ; i++) {
+      const qEl = document.getElementById('q' + i);
+      qEl.classList.remove('answered');
+      qEl.querySelectorAll('.quiz-option').forEach(o => {
+        o.classList.remove('correct','wrong','answered');
+      });
+      const fb = document.getElementById('fb' + i);
+      fb.classList.remove('show','ok','err');
+      fb.textContent = '';
+    }
+    document.getElementById('quiz-score-bar').style.display = 'none';
+    document.getElementById('quiz-next-btn').style.display = 'none';
+
+    // reset fill
+    document.querySelectorAll('.fill-input').forEach(inp => {
+      inp.value = '';
+      inp.classList.remove('correct','wrong');
+    });
+    document.getElementById('fill-feedback').style.display = 'none';
+    document.getElementById('fill-next-btn').style.display = 'none';
+
+    // reset tabs
+    document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('done'));
+
+    currentStep = 0;
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('s0').classList.add('active');
+    document.querySelectorAll('.step-tab')[0].classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
