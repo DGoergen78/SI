@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minecraft Server – Netzwerk Lernmodul</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e1a;--surface:#111827;--surface2:#1a2236;--border:#1f2d47;
+    --accent:#00d4ff;--accent2:#ff6b35;--accent3:#7c3aed;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--mc:#5daf34;
+    --text:#e2e8f0;--muted:#64748b;
+    --mono:'JetBrains Mono',monospace;--sans:'Sora',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  .hero{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:12px;}
+  .hero h1{font-size:15px;font-weight:700;color:var(--mc);font-family:var(--mono);white-space:nowrap;}
+  .progress-bar-wrap{background:var(--bg);border-bottom:1px solid var(--border);padding:0 8px;display:flex;overflow-x:auto;scrollbar-width:none;}
+  .progress-bar-wrap::-webkit-scrollbar{display:none;}
+  .step-tab{flex:0 0 auto;padding:10px 14px;font-size:11px;font-family:var(--mono);color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;border-left:none;border-right:none;border-top:none;background:none;white-space:nowrap;transition:all .2s;}
+  .step-tab.active{color:var(--mc);border-bottom-color:var(--mc);}
+  .step-tab.done{color:var(--green);border-bottom-color:var(--green);}
+  .container{max-width:900px;margin:0 auto;padding:40px;}
+  .section{display:none;}
+  .section.active{display:block;animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  h2{font-size:1.75rem;font-weight:700;color:#fff;margin-bottom:10px;}
+  h3{font-size:1.05rem;font-weight:600;color:var(--accent);font-family:var(--mono);margin-bottom:10px;}
+  p{color:#a8b4c8;line-height:1.75;margin-bottom:14px;}
+  strong{color:var(--text);}
+  .section-label{font-family:var(--mono);font-size:11px;color:var(--mc);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;display:block;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+  .card-accent{border-left:3px solid var(--accent);}
+  .card-orange{border-left:3px solid var(--accent2);}
+  .card-green{border-left:3px solid var(--green);}
+  .card-mc{border-left:3px solid var(--mc);}
+  .card-yellow{border-left:3px solid var(--yellow);}
+  .hbox{border-radius:10px;padding:18px 22px;margin-bottom:20px;}
+  .hbox.blue{background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.2);}
+  .hbox.mc{background:rgba(93,175,52,.07);border:1px solid rgba(93,175,52,.2);}
+  .hbox.orange{background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.2);}
+  .hbox.yellow{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);}
+  .hbox.red{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);}
+  .step-list{list-style:none;counter-reset:sl;}
+  .step-list li{counter-increment:sl;padding:14px 14px 14px 54px;position:relative;border-bottom:1px solid var(--border);}
+  .step-list li:last-child{border-bottom:none;}
+  .step-list li::before{content:counter(sl);position:absolute;left:12px;top:14px;width:28px;height:28px;border-radius:50%;background:var(--mc);color:#000;font-family:var(--mono);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;}
+  .step-list li p{margin-bottom:6px;}
+  .step-list li p:last-child{margin-bottom:0;}
+  .data-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;margin-bottom:20px;}
+  .data-table th{background:var(--surface2);color:var(--accent);padding:10px 14px;text-align:left;font-weight:600;border-bottom:1px solid var(--border);}
+  .data-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text);}
+  .data-table tr:last-child td{border-bottom:none;}
+  .data-table tr:hover td{background:var(--surface2);}
+  .tag-src{color:var(--accent);}
+  .tag-dst{color:var(--accent2);}
+  .tag-pub{color:var(--green);}
+  .tag-mc{color:var(--mc);}
+  .diagram-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:24px;text-align:center;overflow-x:auto;}
+  .code-block{background:#060a14;border:1px solid var(--border);border-radius:8px;padding:14px 18px;font-family:var(--mono);font-size:12px;color:#a8b4c8;margin:12px 0;white-space:pre;overflow-x:auto;line-height:1.8;}
+  .code-block .k{color:var(--accent);}
+  .code-block .v{color:var(--mc);}
+  .code-block .c{color:var(--muted);}
+  .quiz-question{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+  .quiz-question .q-text{font-weight:600;color:#fff;margin-bottom:18px;font-size:1rem;line-height:1.5;}
+  .quiz-options{display:flex;flex-direction:column;gap:10px;}
+  .quiz-option{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--text);text-align:left;transition:all .2s;}
+  .quiz-option:hover:not(.answered){border-color:var(--mc);color:var(--mc);background:rgba(93,175,52,.05);}
+  .quiz-option.correct{border-color:var(--green);background:rgba(16,185,129,.1);color:var(--green);}
+  .quiz-option.wrong{border-color:var(--red);background:rgba(239,68,68,.1);color:var(--red);}
+  .quiz-feedback{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:13px;display:none;}
+  .quiz-feedback.show{display:block;}
+  .quiz-feedback.ok{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+  .quiz-feedback.err{background:rgba(239,68,68,.12);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+  .fill-table{width:100%;border-collapse:collapse;}
+  .fill-table th{background:var(--surface2);color:var(--accent);font-family:var(--mono);font-size:12px;padding:10px 12px;text-align:left;border:1px solid var(--border);}
+  .fill-table td{border:1px solid var(--border);padding:7px 8px;vertical-align:middle;}
+  .fill-input{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 12px;color:var(--text);font-family:var(--mono);font-size:12px;width:100%;transition:border-color .2s;}
+  .fill-input:focus{outline:none;border-color:var(--mc);}
+  .fill-input.correct{border-color:var(--green);background:rgba(16,185,129,.08);color:var(--green);}
+  .fill-input.wrong{border-color:var(--red);background:rgba(239,68,68,.08);}
+  .fill-given{font-family:var(--mono);font-size:12px;display:block;padding:7px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);color:var(--muted);}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:8px;font-family:var(--sans);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;border:none;}
+  .btn-primary{background:var(--mc);color:#000;}
+  .btn-primary:hover{background:#4a9428;transform:translateY(-1px);}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+  .btn-outline:hover{border-color:var(--mc);color:var(--mc);}
+  .nav-row{display:flex;justify-content:space-between;margin-top:40px;padding-top:24px;border-top:1px solid var(--border);}
+  .score-circle{width:140px;height:140px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 24px;background:rgba(16,185,129,.08);}
+  .score-num{font-size:3rem;font-weight:800;color:var(--green);font-family:var(--mono);line-height:1;}
+  .score-sub{font-size:12px;color:var(--muted);font-family:var(--mono);}
+  .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+  .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;}
+  .sum-card .lbl{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px;}
+  .sum-card .val{font-family:var(--mono);font-size:12px;color:var(--text);line-height:1.6;}
+  .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+  .mono{font-family:var(--mono);}
+  .accent{color:var(--accent);}
+  .green-t{color:var(--green);}
+  .mc-t{color:var(--mc);}
+  .yellow-t{color:var(--yellow);}
+  .checklist{list-style:none;}
+  .checklist li{padding:10px 0 10px 32px;position:relative;border-bottom:1px solid var(--border);color:#a8b4c8;font-size:14px;line-height:1.6;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist li::before{content:'☐';position:absolute;left:0;color:var(--mc);font-size:16px;}
+  @media(max-width:600px){.container{padding:24px 16px;}.sum-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span style="font-size:18px">⛏️</span>
+  <h1>Minecraft Server &amp; Netzwerk</h1>
+  <span style="color:var(--border)">·</span>
+  <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">Lernmodul</span>
+</div>
+
+<div class="progress-bar-wrap" id="tabBar">
+  <button class="step-tab active" onclick="goTo(0)">Überblick</button>
+  <button class="step-tab" onclick="goTo(1)">Port-Weiterleitung</button>
+  <button class="step-tab" onclick="goTo(2)">DynDNS</button>
+  <button class="step-tab" onclick="goTo(3)">Firewall &amp; Setup</button>
+  <button class="step-tab" onclick="goTo(4)">Paketweg</button>
+  <button class="step-tab" onclick="goTo(5)">Übung</button>
+  <button class="step-tab" onclick="goTo(6)">Auswertung</button>
+  <button class="step-tab" onclick="goTo(7)" style="border-left:1px solid var(--border);margin-left:8px;color:var(--yellow)">⚡ Referenz</button>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════ S0: ÜBERBLICK ══════════════════════════ -->
+<div class="section active" id="s0">
+  <span class="section-label">Einführung</span>
+  <h2>Minecraft Server im Heimnetz</h2>
+  <p>Du willst einen eigenen Minecraft Server betreiben, damit Freunde von außen mitspielen können. Das klingt einfach – aber zwischen deinem Server und deinen Freunden stehen <strong>Router, NAT, Firewalls und das DNS-System</strong>.</p>
+
+  <div class="hbox blue">
+    <h3 style="color:var(--accent);margin-bottom:10px">🌍 Das Grundproblem</h3>
+    <p style="margin-bottom:0">Dein Minecraft Server hat eine <strong>private IP</strong> (z.B. 192.168.1.100) – die ist im Internet nicht erreichbar. Dein Router hat eine <strong>öffentliche IP</strong>, aber die ändert sich bei den meisten Heimanschlüssen täglich. Und selbst wenn Freunde die richtige IP kennen: Der Router weiß nicht, an welches Gerät er Minecraft-Pakete weiterleiten soll.</p>
+  </div>
+
+  <div class="card card-mc">
+    <h3>Was muss gelöst werden?</h3>
+    <ul class="step-list">
+      <li><p><strong>Erreichbarkeit:</strong> Der Router muss wissen, dass eingehende Pakete auf Port 25565 an den Server-PC weitergeleitet werden sollen → <strong>Port-Weiterleitung</strong></p></li>
+      <li><p><strong>Adressierbarkeit:</strong> Freunde brauchen eine feste Adresse. Da die öffentliche IP sich täglich ändert, braucht man einen festen Hostnamen → <strong>DynDNS</strong></p></li>
+      <li><p><strong>Freigabe:</strong> Router-Firewall und PC-Firewall müssen den Minecraft-Port erlauben → <strong>Firewall-Regeln</strong></p></li>
+      <li><p><strong>Stabilität:</strong> Der Server-PC braucht eine feste private IP, damit die Port-Weiterleitung immer auf das richtige Gerät zeigt → <strong>DHCP-Reservierung oder statische IP</strong></p></li>
+    </ul>
+  </div>
+
+  <div class="diagram-wrap">
+    <h3 style="margin-bottom:18px">Gesamtbild: Was passiert wenn ein Freund verbindet</h3>
+    <svg style="width:100%;max-width:760px;height:auto" viewBox="0 0 760 240" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#5daf34"/></marker>
+        <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse"><polygon points="0 0,8 3,0 6" fill="#00d4ff"/></marker>
+        <marker id="a3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f59e0b"/></marker>
+      </defs>
+      <rect x="4" y="70" width="120" height="100" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="64" y="96" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">Freund</text>
+      <text x="64" y="112" fill="#00d4ff" font-size="11" text-anchor="middle" font-family="JetBrains Mono">85.10.20.5</text>
+      <text x="64" y="128" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">:54321</text>
+      <text x="64" y="144" fill="#5daf34" font-size="9" text-anchor="middle" font-family="JetBrains Mono">MC Client</text>
+      <rect x="164" y="10" width="140" height="52" rx="8" fill="#111827" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="234" y="32" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">DynDNS-Server</text>
+      <text x="234" y="47" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">mein-server.ddns.net</text>
+      <text x="234" y="58" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">→ 91.48.77.200</text>
+      <line x1="120" y1="90" x2="163" y2="48" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a3)"/>
+      <text x="126" y="60" fill="#f59e0b" font-size="8" font-family="JetBrains Mono">① DNS?</text>
+      <line x1="163" y1="56" x2="121" y2="106" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a3)"/>
+      <text x="124" y="88" fill="#10b981" font-size="8" font-family="JetBrains Mono">② IP</text>
+      <line x1="126" y1="128" x2="280" y2="128" stroke="#5daf34" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="203" y="120" fill="#5daf34" font-size="9" text-anchor="middle" font-family="JetBrains Mono">③ :25565</text>
+      <rect x="282" y="78" width="150" height="100" rx="8" fill="#111827" stroke="#5daf34" stroke-width="2"/>
+      <text x="357" y="104" fill="#5daf34" font-size="11" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">Router</text>
+      <text x="357" y="120" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">WAN: 91.48.77.200</text>
+      <text x="357" y="135" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">LAN: 192.168.1.1</text>
+      <text x="357" y="150" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Port-Weiterleitung</text>
+      <text x="357" y="165" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">25565→192.168.1.100</text>
+      <line x1="434" y1="128" x2="578" y2="128" stroke="#5daf34" stroke-width="2" marker-end="url(#a1)"/>
+      <text x="506" y="120" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">④ → 192.168.1.100</text>
+      <rect x="580" y="78" width="150" height="100" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="655" y="104" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">MC Server</text>
+      <text x="655" y="120" fill="#5daf34" font-size="11" text-anchor="middle" font-family="JetBrains Mono">192.168.1.100</text>
+      <text x="655" y="136" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">:25565 (TCP)</text>
+      <text x="655" y="152" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Java Edition</text>
+      <line x1="578" y1="188" x2="436" y2="188" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#a2)" stroke-dasharray="5,3"/>
+      <line x1="280" y1="188" x2="128" y2="188" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#a2)" stroke-dasharray="5,3"/>
+      <line x1="357" y1="178" x2="357" y2="188" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="655" y1="178" x2="655" y2="188" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="64" y1="170" x2="64" y2="188" stroke="#1f2d47" stroke-width="1"/>
+      <text x="506" y="205" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">⑤ Antwort</text>
+      <text x="203" y="205" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">⑥ Antwort</text>
+    </svg>
+  </div>
+
+  <div class="card card-orange">
+    <h3>Port 25565 – Der Minecraft-Standard</h3>
+    <p style="margin-bottom:0">Minecraft Java Edition verwendet <span class="mono mc-t">TCP Port 25565</span>. Dieser Port muss im Router weitergeleitet und in der Firewall freigegeben werden. Bedrock Edition nutzt <span class="mono yellow-t">UDP Port 19132</span>.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" disabled>← Zurück</button>
+    <button class="btn btn-primary" onclick="goTo(1)">Weiter: Port-Weiterleitung →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S1: PORT-WEITERLEITUNG ══════════════════════════ -->
+<div class="section" id="s1">
+  <span class="section-label">Schritt 1</span>
+  <h2>Port-Weiterleitung</h2>
+  <p>Die <strong>Port-Weiterleitung</strong> (engl. <em>Port Forwarding</em>) ist eine statische NAT-Regel: Eingehende Pakete auf einem bestimmten Port werden immer an ein bestimmtes Gerät im LAN weitergeleitet.</p>
+
+  <div class="hbox blue">
+    <h3 style="color:var(--accent);margin-bottom:10px">💡 Warum reicht normales PAT nicht?</h3>
+    <p style="margin-bottom:0">Normales PAT/NAT ist <strong>ausgehend</strong>: Der Client im LAN baut eine Verbindung auf, der Router merkt sich die Zuordnung. Dein Minecraft Server wartet aber passiv auf <strong>eingehende</strong> Verbindungen – es gibt keinen Client, der zuerst nach außen verbindet. Der Router hat also keinen Tabelleneintrag und weiß nicht, wohin er das Paket schicken soll. Port-Weiterleitung löst das durch eine <strong>feste, dauerhafte Regel</strong>.</p>
+  </div>
+
+  <div class="card card-mc">
+    <h3>PAT (ausgehend) vs. Port-Weiterleitung (eingehend)</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">
+      <div style="background:var(--surface2);border-radius:8px;padding:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px">PAT (ausgehend)</div>
+        <div style="font-family:var(--mono);font-size:11px;line-height:2.1;color:#a8b4c8">
+          <div>Client baut Verbindung auf →</div>
+          <div>Tabelle: dynamisch erstellt</div>
+          <div>Wird nach Timeout gelöscht</div>
+          <div style="color:var(--red)">Kein Eintrag = kein Zugang</div>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px;border:1px solid rgba(93,175,52,.3)">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--mc);margin-bottom:8px">Port-Weiterleitung (eingehend)</div>
+        <div style="font-family:var(--mono);font-size:11px;line-height:2.1;color:#a8b4c8">
+          <div>Feste Regel im Router</div>
+          <div>Immer aktiv (kein Timeout)</div>
+          <div>Unabhängig von Verbindungen</div>
+          <div style="color:var(--green)">Ermöglicht Server-Betrieb ✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>So richtest du Port-Weiterleitung ein</h3>
+    <p>Im Router-Menü (z.B. Fritz!Box: Heimnetz → Netzwerk → Portfreigaben) legst du folgende Regel an:</p>
+    <div class="code-block"><span class="k">Protokoll:</span>     <span class="v">TCP</span>
+<span class="k">Externer Port:</span> <span class="v">25565</span>
+<span class="k">Interne IP:</span>    <span class="v">192.168.1.100</span>  <span class="c">← dein Server-PC</span>
+<span class="k">Interner Port:</span> <span class="v">25565</span></div>
+    <p style="margin-bottom:0">Ab jetzt leitet der Router jedes eingehende Paket auf Port 25565 <strong>immer</strong> an 192.168.1.100 weiter – egal ob gerade jemand verbunden ist oder nicht.</p>
+  </div>
+
+  <div class="diagram-wrap">
+    <h3 style="margin-bottom:16px">Eingehende Pakete: Wohin leitet der Router sie?</h3>
+    <svg style="width:100%;max-width:700px;height:auto" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="pa" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#5daf34"/></marker>
+        <marker id="pb" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#ef4444"/></marker>
+      </defs>
+      <rect x="4" y="68" width="140" height="44" rx="6" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="74" y="87" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Eingehendes Paket</text>
+      <text x="74" y="102" fill="#00d4ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono">91.48.77.200:25565</text>
+      <line x1="146" y1="90" x2="198" y2="90" stroke="#5daf34" stroke-width="2" marker-end="url(#pa)"/>
+      <rect x="200" y="52" width="156" height="76" rx="8" fill="#111827" stroke="#5daf34" stroke-width="2"/>
+      <text x="278" y="76" fill="#5daf34" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">Router prüft</text>
+      <text x="278" y="92" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Port 25565?</text>
+      <text x="278" y="108" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">→ Weiterleitungsregel!</text>
+      <text x="278" y="120" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">192.168.1.100</text>
+      <line x1="358" y1="76" x2="452" y2="52" stroke="#5daf34" stroke-width="2" marker-end="url(#pa)"/>
+      <line x1="358" y1="106" x2="452" y2="130" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#pb)"/>
+      <rect x="454" y="36" width="138" height="38" rx="6" fill="#111827" stroke="#5daf34" stroke-width="1.5"/>
+      <text x="523" y="52" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">MC Server ✓</text>
+      <text x="523" y="66" fill="#5daf34" font-size="10" text-anchor="middle" font-family="JetBrains Mono">192.168.1.100</text>
+      <rect x="454" y="116" width="138" height="38" rx="6" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="523" y="132" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Andere Geräte ✗</text>
+      <text x="523" y="146" fill="#ef4444" font-size="9" text-anchor="middle" font-family="JetBrains Mono">werden ignoriert</text>
+      <text x="404" y="46" fill="#5daf34" font-size="8" font-family="JetBrains Mono">Port 25565 →</text>
+      <text x="400" y="130" fill="#ef4444" font-size="8" font-family="JetBrains Mono">andere Ports</text>
+    </svg>
+  </div>
+
+  <div class="hbox yellow">
+    <h3 style="color:var(--yellow);margin-bottom:10px">⚠️ Feste private IP ist Pflicht!</h3>
+    <p style="margin-bottom:0">Die Port-Weiterleitung zeigt auf eine <strong>bestimmte IP-Adresse</strong>. Wenn der Server-PC per DHCP eine neue IP bekommt, geht die Weiterleitung ins Leere. Lösung: Im Router eine <strong>DHCP-Reservierung</strong> (MAC-Binding) einrichten, oder am Server-PC eine statische IP vergeben.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(0)">← Zurück</button>
+    <button class="btn btn-primary" onclick="goTo(2)">Weiter: DynDNS →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S2: DYNDNS ══════════════════════════ -->
+<div class="section" id="s2">
+  <span class="section-label">Schritt 2</span>
+  <h2>DynDNS – Dynamisches DNS</h2>
+  <p>Dein Heimanschluss bekommt vom Internetanbieter (ISP) in der Regel <strong>keine feste öffentliche IP</strong> – sie ändert sich meist täglich. Freunde könnten heute <em>91.48.77.200</em> eingeben, morgen wäre die IP schon eine andere.</p>
+
+  <div class="hbox blue">
+    <h3 style="color:var(--accent);margin-bottom:10px">🌐 Was ist DNS?</h3>
+    <p style="margin-bottom:0"><strong>DNS</strong> (Domain Name System) ist das „Telefonbuch des Internets": Es übersetzt Hostnamen wie <span class="mono accent">google.com</span> in IP-Adressen. Normalerweise ist ein DNS-Eintrag statisch – <strong>DynDNS macht ihn dynamisch</strong>: Der Eintrag wird automatisch aktualisiert, wenn sich die IP ändert.</p>
+  </div>
+
+  <div class="card card-yellow">
+    <h3 style="color:var(--yellow)">Wie DynDNS funktioniert – Schritt für Schritt</h3>
+    <ul class="step-list">
+      <li><p>Du registrierst einen kostenlosen Hostnamen, z.B. <span class="mono mc-t">mein-server.ddns.net</span></p></li>
+      <li><p>Auf deinem Router oder Server-PC läuft ein <strong>DynDNS-Client</strong> (viele Fritz!Boxen haben das eingebaut). Er prüft regelmäßig deine öffentliche IP.</p></li>
+      <li><p>Ändert sich die IP, sendet der Client ein Update an den DynDNS-Server: <em>„mein-server.ddns.net zeigt jetzt auf 91.48.77.200"</em></p></li>
+      <li><p>Der DynDNS-Server aktualisiert den DNS-Eintrag (TTL meist sehr kurz: 60–300 Sekunden)</p></li>
+      <li><p>Freunde verbinden einfach mit <span class="mono mc-t">mein-server.ddns.net:25565</span> – der Hostname bleibt immer gleich</p></li>
+    </ul>
+  </div>
+
+  <div class="diagram-wrap">
+    <h3 style="margin-bottom:16px">DNS-Auflösung beim Verbindungsaufbau</h3>
+    <svg style="width:100%;max-width:700px;height:auto" viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="da" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#f59e0b"/></marker>
+        <marker id="db" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse"><polygon points="0 0,8 3,0 6" fill="#10b981"/></marker>
+        <marker id="dc" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#5daf34"/></marker>
+      </defs>
+      <rect x="4" y="78" width="122" height="64" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="65" y="102" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">MC Client</text>
+      <text x="65" y="118" fill="#00d4ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono">Freund</text>
+      <text x="65" y="134" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">85.10.20.5</text>
+      <rect x="260" y="18" width="182" height="62" rx="8" fill="#111827" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="351" y="40" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">DynDNS Server</text>
+      <text x="351" y="56" fill="#10b981" font-size="10" text-anchor="middle" font-family="JetBrains Mono">mein-server.ddns.net</text>
+      <text x="351" y="71" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">→ 91.48.77.200</text>
+      <line x1="126" y1="92" x2="258" y2="52" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#da)"/>
+      <text x="178" y="62" fill="#f59e0b" font-size="9" font-family="JetBrains Mono">① DNS-Anfrage</text>
+      <line x1="258" y1="66" x2="128" y2="106" stroke="#10b981" stroke-width="1.5" marker-end="url(#db)"/>
+      <text x="158" y="98" fill="#10b981" font-size="9" font-family="JetBrains Mono">② 91.48.77.200</text>
+      <rect x="460" y="78" width="142" height="64" rx="8" fill="#111827" stroke="#5daf34" stroke-width="1.5"/>
+      <text x="531" y="102" fill="#5daf34" font-size="10" text-anchor="middle" font-family="JetBrains Mono">Router B</text>
+      <text x="531" y="118" fill="#10b981" font-size="10" text-anchor="middle" font-family="JetBrains Mono">91.48.77.200</text>
+      <text x="531" y="134" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Port-Weiterleitung</text>
+      <line x1="128" y1="120" x2="458" y2="120" stroke="#5daf34" stroke-width="2" marker-end="url(#dc)"/>
+      <text x="293" y="112" fill="#5daf34" font-size="9" text-anchor="middle" font-family="JetBrains Mono">③ TCP-Verbindung :25565</text>
+      <line x1="531" y1="80" x2="444" y2="58" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#da)"/>
+      <text x="466" y="54" fill="#f59e0b" font-size="8" font-family="JetBrains Mono">IP-Update</text>
+    </svg>
+  </div>
+
+  <div class="card card-orange">
+    <h3>Bekannte DynDNS-Anbieter</h3>
+    <table class="data-table" style="margin-bottom:0">
+      <tr><th>Anbieter</th><th>Kosten</th><th>Hostname-Beispiel</th></tr>
+      <tr><td class="mono mc-t">No-IP</td><td>Kostenlos (monatl. Bestätigung nötig)</td><td class="mono" style="font-size:11px">name.ddns.net</td></tr>
+      <tr><td class="mono mc-t">DuckDNS</td><td>Kostenlos</td><td class="mono" style="font-size:11px">name.duckdns.org</td></tr>
+      <tr><td class="mono mc-t">Dynu</td><td>Kostenlos</td><td class="mono" style="font-size:11px">name.dynu.net</td></tr>
+      <tr><td class="mono mc-t">MyFRITZ! (AVM)</td><td>Kostenlos (Fritz!Box)</td><td class="mono" style="font-size:11px">xxx.myfritz.net</td></tr>
+    </table>
+  </div>
+
+  <div class="hbox yellow">
+    <h3 style="color:var(--yellow);margin-bottom:8px">⚠️ TTL – Wie schnell aktualisiert sich DNS?</h3>
+    <p style="margin-bottom:0">DNS-Einträge werden zwischengespeichert (<strong>TTL</strong> = Time To Live, in Sekunden). Bei DynDNS ist die TTL meist 60–300 Sekunden. Nach einer IP-Änderung kann es bis zu ~5 Minuten dauern, bis alle Clients die neue IP sehen. In dieser Zeit schlägt die Verbindung fehl.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(1)">← Zurück</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Weiter: Firewall &amp; Setup →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S3: FIREWALL & SETUP ══════════════════════════ -->
+<div class="section" id="s3">
+  <span class="section-label">Schritt 3 &amp; 4</span>
+  <h2>Firewall &amp; Vollständiges Setup</h2>
+  <p>Selbst mit Port-Weiterleitung und DynDNS kann es noch scheitern – wenn die Firewall auf dem Router oder dem Server-PC den Port blockiert. Es gibt <strong>zwei Firewalls</strong>, die beide freigegeben sein müssen.</p>
+
+  <div class="card card-accent">
+    <h3>Zwei Firewalls – beide müssen offen sein</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">
+      <div style="background:var(--surface2);border-radius:8px;padding:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-bottom:8px">🔒 Router-Firewall</div>
+        <p style="font-size:13px;margin-bottom:0">Router blockt standardmäßig <strong>alle eingehenden Verbindungen</strong>. Die Port-Weiterleitung ist gleichzeitig die Freigabe – wer eine Weiterleitungsregel anlegt, öffnet damit automatisch den Port in der Router-Firewall.</p>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--accent2);margin-bottom:8px">🔒 PC-Firewall (Windows/Linux)</div>
+        <p style="font-size:13px;margin-bottom:0">Das Betriebssystem hat eine eigene Firewall. <strong>Windows</strong> fragt beim ersten Start von Minecraft automatisch. <strong>Linux</strong> muss manuell konfiguriert werden.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-mc">
+    <h3>Vollständige Setup-Checkliste</h3>
+    <ul class="checklist">
+      <li><strong>1. Minecraft Server installieren</strong> – starten mit <span class="mono mc-t">java -jar server.jar</span>. Server lauscht auf <span class="mono mc-t">0.0.0.0:25565</span></li>
+      <li><strong>2. Feste private IP</strong> – DHCP-Reservierung im Router (per MAC-Adresse) oder statisch am PC: <span class="mono mc-t">192.168.1.100</span></li>
+      <li><strong>3. Port-Weiterleitung</strong> – im Router: TCP 25565 → 192.168.1.100:25565</li>
+      <li><strong>4. PC-Firewall öffnen</strong> – Port 25565 TCP eingehend erlauben (Windows/Linux)</li>
+      <li><strong>5. DynDNS einrichten</strong> – Account anlegen, Client auf Router oder Server-PC konfigurieren</li>
+      <li><strong>6. Testen</strong> – von außen verbinden (z.B. Mobilfunk statt WLAN nutzen!)</li>
+    </ul>
+  </div>
+
+  <div class="card card-orange">
+    <h3>Firewall-Befehle</h3>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:4px">Linux – ufw:</div>
+    <div class="code-block"><span class="k">sudo ufw allow 25565/tcp</span>
+<span class="k">sudo ufw status</span></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 0 4px">Linux – iptables:</div>
+    <div class="code-block"><span class="k">iptables -A INPUT -p tcp --dport 25565 -j ACCEPT</span></div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin:12px 0 4px">Windows – PowerShell (als Admin):</div>
+    <div class="code-block"><span class="k">New-NetFirewallRule</span> <span class="v">-DisplayName "Minecraft"</span> <span class="c">`</span>
+  <span class="v">-Direction Inbound -Protocol TCP</span> <span class="c">`</span>
+  <span class="v">-LocalPort 25565 -Action Allow</span></div>
+  </div>
+
+  <div class="hbox red">
+    <h3 style="color:var(--red);margin-bottom:12px">🚨 Häufige Fehlerquellen</h3>
+    <table class="data-table" style="margin-bottom:0;font-size:12px">
+      <tr><th>Problem</th><th>Ursache</th><th>Lösung</th></tr>
+      <tr><td style="color:#fca5a5">Gar nicht erreichbar</td><td>PC-Firewall blockt</td><td>Port 25565 freigeben</td></tr>
+      <tr><td style="color:#fca5a5">Nur intern erreichbar</td><td>Port-Weiterleitung fehlt</td><td>Router-Einstellung prüfen</td></tr>
+      <tr><td style="color:#fca5a5">Manchmal nicht erreichbar</td><td>IP des PCs hat sich geändert</td><td>DHCP-Reservierung</td></tr>
+      <tr><td style="color:#fca5a5">Hostname löst falsch auf</td><td>DNS-TTL noch aktiv</td><td>Warten (~5 min) oder DNS leeren</td></tr>
+      <tr><td style="color:#fca5a5">Von innen nicht erreichbar</td><td>NAT-Loopback fehlt</td><td>Intern direkt: 192.168.1.100</td></tr>
+    </table>
+  </div>
+
+  <div class="hbox mc">
+    <h3 style="color:var(--mc);margin-bottom:8px">🏠 NAT-Loopback (Hairpin-NAT)</h3>
+    <p style="margin-bottom:0">Wenn du dich <strong>selbst</strong> über den DynDNS-Namen verbindest, schickt dein PC ein Paket an die eigene öffentliche IP. Nicht alle Router können solche Pakete zurück ins LAN leiten (NAT-Loopback). Lösung: Intern immer direkt die private IP <span class="mono mc-t">192.168.1.100</span> oder <span class="mono mc-t">localhost</span> verwenden.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(2)">← Zurück</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Weiter: Paketweg →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S4: PAKETWEG ══════════════════════════ -->
+<div class="section" id="s4">
+  <span class="section-label">Paketanalyse</span>
+  <h2>Der vollständige Paketweg</h2>
+  <p>Jetzt schauen wir uns an, wie ein Paket von einem Freund (in seinem eigenen privaten Netz) bis zu deinem Minecraft Server reist – und zurück. Beide Seiten sitzen hinter einem Router.</p>
+
+  <div class="card card-accent">
+    <h3>Unsere Beispielkonfiguration</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px;font-family:var(--mono);font-size:12px">
+      <div>
+        <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Freund (Client-Seite)</div>
+        <div>🖥️ PC: <span class="accent">192.168.2.50</span></div>
+        <div>🔌 Quellport: <span class="accent">54321</span></div>
+        <div>📡 Router WAN: <span class="green-t">85.10.20.5</span></div>
+      </div>
+      <div>
+        <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Server-Seite (du)</div>
+        <div>⛏️ MC Server: <span class="mc-t">192.168.1.100:25565</span></div>
+        <div>📡 Router WAN: <span class="green-t">91.48.77.200</span></div>
+        <div>🌐 DynDNS: <span class="yellow-t">mein-server.ddns.net</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-mc">
+    <h3>Schritt 1: DNS-Auflösung</h3>
+    <p>Bevor das erste Spielpaket gesendet wird, fragt der MC Client den DynDNS-Server:</p>
+    <div style="font-family:var(--mono);font-size:12px;background:var(--surface2);padding:12px 14px;border-radius:8px;line-height:2">
+      <div>Anfrage: <span class="yellow-t">mein-server.ddns.net</span> → was ist die IP?</div>
+      <div>Antwort: <span class="green-t">91.48.77.200</span></div>
+    </div>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Schritt 2: PAT beim Freund-Router (ausgehend)</h3>
+    <p>Der Freund baut die TCP-Verbindung auf. Sein Router macht normales PAT:</p>
+    <table class="data-table" style="margin-top:10px">
+      <tr><th>Abschnitt</th><th>Source</th><th>Destination</th></tr>
+      <tr><td style="color:var(--accent)">Im LAN des Freundes</td><td class="tag-src">192.168.2.50:54321</td><td class="tag-mc">91.48.77.200:25565</td></tr>
+      <tr><td style="color:var(--green)">Nach PAT (ins Internet)</td><td class="tag-pub">85.10.20.5:54321</td><td class="tag-mc">91.48.77.200:25565</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:0">Der Router des Freundes ersetzt die private Source-IP durch seine öffentliche IP. Da kein Port-Konflikt besteht, bleibt Port 54321 gleich.</p>
+  </div>
+
+  <div class="card card-orange">
+    <h3>Schritt 3: Port-Weiterleitung beim Server-Router</h3>
+    <p>Das Paket kommt an der WAN-Schnittstelle an. Router B prüft: Port 25565 → Weiterleitungsregel!</p>
+    <table class="data-table" style="margin-top:10px">
+      <tr><th>Abschnitt</th><th>Source</th><th>Destination</th></tr>
+      <tr><td style="color:var(--green)">Ankunft am WAN</td><td class="tag-pub">85.10.20.5:54321</td><td class="tag-mc">91.48.77.200:25565</td></tr>
+      <tr><td style="color:var(--mc)">Nach Port-Weiterleitung</td><td class="tag-pub">85.10.20.5:54321</td><td class="tag-mc">192.168.1.100:25565</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:0">Nur die <strong>Destination-IP</strong> ändert sich – von der öffentlichen Router-IP zur privaten Server-IP. Source und Ports bleiben unangetastet.</p>
+  </div>
+
+  <div class="card card-green">
+    <h3>Schritt 4: Ankunft am Minecraft Server</h3>
+    <p>Der MC Server empfängt das Paket. Aus Sicht des Servers:</p>
+    <table class="data-table" style="margin-top:10px">
+      <tr><th>Source</th><th>Destination</th></tr>
+      <tr><td class="tag-pub">85.10.20.5:54321</td><td class="tag-mc">192.168.1.100:25565</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:0">Der Server sieht die öffentliche IP des Freundes. Er weiß <strong>nicht</strong>, dass dahinter ein privates Netz mit 192.168.2.50 steckt.</p>
+  </div>
+
+  <div class="card card-yellow">
+    <h3 style="color:var(--yellow)">Schritt 5: Der Rückweg (Antwort)</h3>
+    <table class="data-table" style="margin-top:10px">
+      <tr><th>Abschnitt</th><th>Source</th><th>Destination</th></tr>
+      <tr><td style="color:var(--mc)">MC Server → Server-Router</td><td class="tag-mc">192.168.1.100:25565</td><td class="tag-pub">85.10.20.5:54321</td></tr>
+      <tr><td style="color:var(--green)">Server-Router → Internet</td><td class="tag-pub">91.48.77.200:25565</td><td class="tag-pub">85.10.20.5:54321</td></tr>
+      <tr><td style="color:var(--green)">Freund-Router (PAT rückwärts)</td><td class="tag-pub">91.48.77.200:25565</td><td class="tag-src">192.168.2.50:54321</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:0">Router B ersetzt Source-IP 192.168.1.100 durch seine öffentliche WAN-IP. Router A des Freundes übersetzt Destination zurück zur privaten IP des Freundes.</p>
+  </div>
+
+  <div class="diagram-wrap">
+    <h3 style="margin-bottom:18px">Vollständiger Paketweg – Überblick</h3>
+    <svg style="width:100%;max-width:760px;height:auto" viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="fw" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#5daf34"/></marker>
+        <marker id="bw" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto-start-reverse"><polygon points="0 0,8 3,0 6" fill="#00d4ff"/></marker>
+      </defs>
+      <rect x="4" y="60" width="112" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="60" y="82" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Freund LAN</text>
+      <text x="60" y="97" fill="#00d4ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono">192.168.2.50</text>
+      <text x="60" y="112" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">:54321</text>
+      <text x="60" y="127" fill="#5daf34" font-size="9" text-anchor="middle" font-family="JetBrains Mono">MC Client</text>
+
+      <rect x="150" y="50" width="122" height="100" rx="8" fill="#111827" stroke="#00d4ff" stroke-width="2"/>
+      <text x="211" y="74" fill="#00d4ff" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">Router A</text>
+      <text x="211" y="89" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono">PAT ausgehend</text>
+      <text x="211" y="103" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">85.10.20.5</text>
+      <text x="211" y="117" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">src: 192.x</text>
+      <text x="211" y="130" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">→ 85.x</text>
+      <text x="211" y="143" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">(PAT-Tabelle)</text>
+
+      <rect x="308" y="72" width="128" height="56" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1"/>
+      <text x="372" y="97" fill="#64748b" font-size="10" text-anchor="middle" font-family="JetBrains Mono">🌐 Internet</text>
+      <text x="372" y="113" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">85.x ↔ 91.x</text>
+
+      <rect x="472" y="50" width="130" height="100" rx="8" fill="#111827" stroke="#5daf34" stroke-width="2"/>
+      <text x="537" y="74" fill="#5daf34" font-size="10" text-anchor="middle" font-family="JetBrains Mono" font-weight="700">Router B</text>
+      <text x="537" y="89" fill="#64748b" font-size="8.5" text-anchor="middle" font-family="JetBrains Mono">Port-Weiterleitung</text>
+      <text x="537" y="103" fill="#10b981" font-size="9" text-anchor="middle" font-family="JetBrains Mono">91.48.77.200</text>
+      <text x="537" y="117" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">dst: 91.x:25565</text>
+      <text x="537" y="130" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">→ 192.168.1.100</text>
+      <text x="537" y="143" fill="#5daf34" font-size="8" text-anchor="middle" font-family="JetBrains Mono">(feste Regel)</text>
+
+      <rect x="640" y="60" width="112" height="80" rx="8" fill="#111827" stroke="#1f2d47" stroke-width="1.5"/>
+      <text x="696" y="82" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">MC Server</text>
+      <text x="696" y="97" fill="#5daf34" font-size="10" text-anchor="middle" font-family="JetBrains Mono">192.168.1.100</text>
+      <text x="696" y="112" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">:25565</text>
+      <text x="696" y="127" fill="#64748b" font-size="9" text-anchor="middle" font-family="JetBrains Mono">Java Edition</text>
+
+      <line x1="118" y1="86" x2="148" y2="86" stroke="#5daf34" stroke-width="2" marker-end="url(#fw)"/>
+      <line x1="274" y1="86" x2="306" y2="86" stroke="#5daf34" stroke-width="2" marker-end="url(#fw)"/>
+      <line x1="438" y1="86" x2="470" y2="86" stroke="#5daf34" stroke-width="2" marker-end="url(#fw)"/>
+      <line x1="604" y1="86" x2="638" y2="86" stroke="#5daf34" stroke-width="2" marker-end="url(#fw)"/>
+
+      <text x="130" y="79" fill="#5daf34" font-size="8" font-family="JetBrains Mono">①</text>
+      <text x="290" y="79" fill="#5daf34" font-size="8" font-family="JetBrains Mono">②</text>
+      <text x="454" y="79" fill="#5daf34" font-size="8" font-family="JetBrains Mono">③</text>
+      <text x="620" y="79" fill="#5daf34" font-size="8" font-family="JetBrains Mono">④</text>
+
+      <line x1="118" y1="174" x2="148" y2="174" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#bw)"/>
+      <line x1="274" y1="174" x2="306" y2="174" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#bw)"/>
+      <line x1="438" y1="174" x2="470" y2="174" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#bw)"/>
+      <line x1="604" y1="174" x2="638" y2="174" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#bw)"/>
+
+      <text x="130" y="168" fill="#00d4ff" font-size="8" font-family="JetBrains Mono">⑧</text>
+      <text x="290" y="168" fill="#00d4ff" font-size="8" font-family="JetBrains Mono">⑦</text>
+      <text x="454" y="168" fill="#00d4ff" font-size="8" font-family="JetBrains Mono">⑥</text>
+      <text x="620" y="168" fill="#00d4ff" font-size="8" font-family="JetBrains Mono">⑤</text>
+
+      <line x1="60" y1="140" x2="60" y2="174" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="211" y1="150" x2="211" y2="174" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="372" y1="128" x2="372" y2="174" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="537" y1="150" x2="537" y2="174" stroke="#1f2d47" stroke-width="1"/>
+      <line x1="696" y1="140" x2="696" y2="174" stroke="#1f2d47" stroke-width="1"/>
+
+      <text x="211" y="202" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">PAT</text>
+      <text x="537" y="202" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">Port-Weiterleitung</text>
+      <text x="211" y="213" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">src: 192.x→85.x</text>
+      <text x="537" y="213" fill="#64748b" font-size="8" text-anchor="middle" font-family="JetBrains Mono">dst: 91.x→192.x</text>
+
+      <line x1="4" y1="238" x2="22" y2="238" stroke="#5daf34" stroke-width="2"/>
+      <text x="26" y="242" fill="#64748b" font-size="9" font-family="JetBrains Mono">Anfrage ①–④</text>
+      <line x1="130" y1="238" x2="148" y2="238" stroke="#00d4ff" stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="152" y="242" fill="#64748b" font-size="9" font-family="JetBrains Mono">Antwort ⑤–⑧</text>
+    </svg>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(3)">← Zurück</button>
+    <button class="btn btn-primary" onclick="goTo(5)">Weiter: Übung →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S5: ÜBUNG ══════════════════════════ -->
+<div class="section" id="s5">
+  <span class="section-label">Übung</span>
+  <h2>Paketweg ausfüllen &amp; Quiz</h2>
+  <p>Fülle die fehlenden Felder aus und beantworte die Fragen. Nutze die Konfiguration unten als Grundlage.</p>
+
+  <div class="card card-accent" style="margin-bottom:22px">
+    <h3>📋 Konfiguration</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;font-family:var(--mono);font-size:12px">
+      <div>
+        <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Freund</div>
+        <div>PC: <span class="accent">192.168.2.50:54321</span></div>
+        <div>Router WAN: <span class="green-t">85.10.20.5</span></div>
+        <div style="color:var(--muted);font-size:10px;margin-top:6px">PAT: 192.168.2.50:54321 → 85.10.20.5:54321</div>
+      </div>
+      <div>
+        <div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Server</div>
+        <div>MC Server: <span class="mc-t">192.168.1.100:25565</span></div>
+        <div>Router WAN: <span class="green-t">91.48.77.200</span></div>
+        <div style="color:var(--muted);font-size:10px;margin-top:6px">Port-Weiterleitung: :25565 → 192.168.1.100</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:12px;border-left:3px solid var(--muted)">
+    <h3 style="color:var(--muted);margin-bottom:10px">Abschnitt 1 – Im LAN des Freundes (gegeben)</h3>
+    <table class="fill-table"><tr><th>Source</th><th>Destination</th></tr>
+    <tr><td><span class="fill-given">192.168.2.50:54321</span></td><td><span class="fill-given">91.48.77.200:25565</span></td></tr></table>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h3 style="margin-bottom:10px">Abschnitt 2 – Nach PAT des Freund-Routers <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+    <table class="fill-table"><tr><th>Source</th><th>Destination</th></tr>
+    <tr>
+      <td><input class="fill-input" id="p2_src" placeholder="IP:Port..." data-answer="85.10.20.5:54321"></td>
+      <td><input class="fill-input" id="p2_dst" placeholder="IP:Port..." data-answer="91.48.77.200:25565"></td>
+    </tr></table>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h3 style="margin-bottom:10px">Abschnitt 3 – Nach Port-Weiterleitung (Server-Router) <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+    <table class="fill-table"><tr><th>Source</th><th>Destination</th></tr>
+    <tr>
+      <td><input class="fill-input" id="p3_src" placeholder="IP:Port..." data-answer="85.10.20.5:54321"></td>
+      <td><input class="fill-input" id="p3_dst" placeholder="IP:Port..." data-answer="192.168.1.100:25565"></td>
+    </tr></table>
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <h3 style="margin-bottom:10px">Abschnitt 4 – Antwort: MC Server → Internet <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+    <table class="fill-table"><tr><th>Source</th><th>Destination</th></tr>
+    <tr>
+      <td><input class="fill-input" id="p4_src" placeholder="IP:Port..." data-answer="91.48.77.200:25565"></td>
+      <td><input class="fill-input" id="p4_dst" placeholder="IP:Port..." data-answer="85.10.20.5:54321"></td>
+    </tr></table>
+  </div>
+
+  <div class="card" style="margin-bottom:22px">
+    <h3 style="margin-bottom:10px">Abschnitt 5 – Antwort beim Freund (nach PAT-Rückübersetzung) <span style="color:var(--muted);font-size:11px;font-weight:400">(ausfüllen)</span></h3>
+    <table class="fill-table"><tr><th>Source</th><th>Destination</th></tr>
+    <tr>
+      <td><input class="fill-input" id="p5_src" placeholder="IP:Port..." data-answer="91.48.77.200:25565"></td>
+      <td><input class="fill-input" id="p5_dst" placeholder="IP:Port..." data-answer="192.168.2.50:54321"></td>
+    </tr></table>
+  </div>
+
+  <div id="fill-feedback" style="display:none;padding:14px;border-radius:10px;margin-bottom:16px;font-family:var(--mono);font-size:13px"></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="checkFill()">Prüfen ✓</button>
+    <button class="btn btn-outline" onclick="showSolution()">Lösung anzeigen</button>
+  </div>
+
+  <hr class="divider" style="margin-top:36px">
+  <h3 style="color:#fff;font-family:var(--sans);font-size:1.2rem;margin-bottom:20px">Verständnisfragen</h3>
+
+  <div class="quiz-question" id="q0">
+    <div class="q-text">1. Warum reicht normales PAT/NAT nicht aus, um einen Minecraft Server betreiben zu können?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="ans(0,0,false)">PAT ist zu langsam für Spieldaten</button>
+      <button class="quiz-option" onclick="ans(0,1,true)">PAT ist ausgehend orientiert – ohne ausgehende Verbindung gibt es keinen Tabelleneintrag für eingehende Pakete</button>
+      <button class="quiz-option" onclick="ans(0,2,false)">PAT unterstützt kein TCP, nur UDP</button>
+      <button class="quiz-option" onclick="ans(0,3,false)">PAT blockiert Port 25565 grundsätzlich</button>
+    </div>
+    <div class="quiz-feedback" id="fb0"></div>
+  </div>
+
+  <div class="quiz-question" id="q1">
+    <div class="q-text">2. Was verändert die Port-Weiterleitung am eingehenden Paket, wenn es den Server-Router passiert?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="ans(1,0,false)">Die Source-IP wird geändert</button>
+      <button class="quiz-option" onclick="ans(1,1,false)">Quell- und Zielport werden getauscht</button>
+      <button class="quiz-option" onclick="ans(1,2,true)">Nur die Destination-IP ändert sich: von der öffentlichen Router-IP zur privaten Server-IP</button>
+      <button class="quiz-option" onclick="ans(1,3,false)">Das Paket wird vollständig neu erstellt</button>
+    </div>
+    <div class="quiz-feedback" id="fb1"></div>
+  </div>
+
+  <div class="quiz-question" id="q2">
+    <div class="q-text">3. Was löst DynDNS beim Minecraft Server-Betrieb?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="ans(2,0,false)">DynDNS verschlüsselt die Verbindung</button>
+      <button class="quiz-option" onclick="ans(2,1,false)">DynDNS weist eine feste öffentliche IP zu</button>
+      <button class="quiz-option" onclick="ans(2,2,true)">DynDNS verknüpft einen festen Hostnamen mit der sich ändernden öffentlichen IP</button>
+      <button class="quiz-option" onclick="ans(2,3,false)">DynDNS öffnet automatisch die Port-Weiterleitung</button>
+    </div>
+    <div class="quiz-feedback" id="fb2"></div>
+  </div>
+
+  <div class="quiz-question" id="q3">
+    <div class="q-text">4. Warum braucht der Minecraft Server eine feste private IP-Adresse?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="ans(3,0,false)">Damit Minecraft schneller läuft</button>
+      <button class="quiz-option" onclick="ans(3,1,true)">Die Port-Weiterleitung zeigt auf eine feste IP – ändert sie sich durch DHCP, geht die Weiterleitung ins Leere</button>
+      <button class="quiz-option" onclick="ans(3,2,false)">Minecraft akzeptiert nur Server mit statischen IPs</button>
+      <button class="quiz-option" onclick="ans(3,3,false)">DynDNS benötigt eine feste private IP</button>
+    </div>
+    <div class="quiz-feedback" id="fb3"></div>
+  </div>
+
+  <div id="quiz-score-bar" style="display:none;margin-top:24px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-family:var(--mono)">
+    <div id="quiz-score-text"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(4)">← Zurück</button>
+    <button class="btn btn-primary" id="next-result-btn" onclick="showResult()" style="display:none">Auswertung →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S6: AUSWERTUNG ══════════════════════════ -->
+<div class="section" id="s6">
+  <span class="section-label">Auswertung</span>
+  <h2>Ergebnis</h2>
+  <div style="text-align:center;padding:40px 0 20px">
+    <div class="score-circle" id="scoreCircle">
+      <div class="score-num" id="scoreNum">-</div>
+      <div class="score-sub">/ 4 Punkte</div>
+    </div>
+    <div id="scoreMsgEl" style="color:var(--muted);margin-bottom:32px"></div>
+  </div>
+
+  <div class="sum-grid">
+    <div class="sum-card"><div class="lbl">Minecraft Port (Java)</div><div class="val" style="color:var(--mc)">TCP 25565</div></div>
+    <div class="sum-card"><div class="lbl">Minecraft Port (Bedrock)</div><div class="val" style="color:var(--yellow)">UDP 19132</div></div>
+    <div class="sum-card"><div class="lbl">Port-Weiterleitung ändert</div><div class="val">Destination-IP<br>öffentlich → privat</div></div>
+    <div class="sum-card"><div class="lbl">PAT beim Freund ändert</div><div class="val">Source-IP<br>privat → öffentlich</div></div>
+    <div class="sum-card"><div class="lbl">DynDNS löst</div><div class="val">Wechselnde IP → fester Hostname</div></div>
+    <div class="sum-card"><div class="lbl">Feste private IP notwendig?</div><div class="val" style="color:var(--green)">Ja – DHCP-Reservierung<br>oder statisch vergeben</div></div>
+  </div>
+
+  <div class="card card-mc">
+    <h3>Der Weg in 5 Sätzen</h3>
+    <ol style="padding-left:20px;line-height:2.3;color:#a8b4c8;font-size:14px">
+      <li>Der Freund gibt <strong>mein-server.ddns.net:25565</strong> ein – DynDNS löst den Namen in die aktuelle öffentliche IP auf.</li>
+      <li>Sein Router macht PAT: die private IP des Freundes wird durch seine öffentliche IP ersetzt.</li>
+      <li>Das Paket erreicht Router B auf Port 25565 – die Port-Weiterleitung ändert die Destination auf 192.168.1.100.</li>
+      <li>Der Minecraft Server empfängt und verarbeitet das Paket und antwortet.</li>
+      <li>Die Antwort durchläuft beide Router rückwärts und kommt beim Freund an.</li>
+    </ol>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="restart()">🔄 Neu starten</button>
+    <button class="btn btn-outline" onclick="goTo(0)">📖 Zurück zum Überblick</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════ S7: REFERENZ ══════════════════════════ -->
+<div class="section" id="s7">
+  <span class="section-label">Referenz</span>
+  <h2>Wichtige Ports &amp; Begriffe</h2>
+
+  <div class="card card-mc" style="margin-bottom:20px">
+    <h3>Minecraft Ports</h3>
+    <table class="data-table" style="margin-bottom:0">
+      <tr><th>Edition</th><th>Protokoll</th><th>Standard-Port</th><th>Konfigurierbar?</th></tr>
+      <tr><td style="color:var(--mc)">Java Edition</td><td>TCP</td><td class="mono mc-t">25565</td><td>Ja (server.properties)</td></tr>
+      <tr><td style="color:var(--yellow)">Bedrock Edition</td><td>UDP</td><td class="mono yellow-t">19132</td><td>Ja (server.properties)</td></tr>
+      <tr><td style="color:var(--muted)">RCON</td><td>TCP</td><td class="mono" style="color:var(--muted)">25575</td><td>Ja</td></tr>
+    </table>
+  </div>
+
+  <div class="card card-accent">
+    <h3>Schlüsselbegriffe</h3>
+    <table class="data-table" style="margin-bottom:0">
+      <tr><th>Begriff</th><th>Bedeutung</th></tr>
+      <tr><td class="mono accent">Port-Weiterleitung</td><td>Statische Regel: eingehend Port X → immer Gerät Y (Destination-NAT)</td></tr>
+      <tr><td class="mono accent">PAT</td><td>Port Address Translation: viele private IPs teilen eine öffentliche IP (ausgehend, Source-NAT)</td></tr>
+      <tr><td class="mono accent">DynDNS / DDNS</td><td>Fester Hostname trotz wechselnder öffentlicher IP</td></tr>
+      <tr><td class="mono accent">TTL</td><td>Time To Live: DNS-Cache-Dauer in Sekunden</td></tr>
+      <tr><td class="mono accent">DHCP-Reservierung</td><td>Router vergibt Gerät (per MAC) immer dieselbe private IP</td></tr>
+      <tr><td class="mono accent">NAT-Loopback</td><td>Pakete von intern an eigene öffentliche IP werden ins LAN zurückgeleitet</td></tr>
+      <tr><td class="mono accent">ISP</td><td>Internet Service Provider – dein Internetanbieter</td></tr>
+      <tr><td class="mono accent">0.0.0.0</td><td>Platzhalter: „alle Netzwerkschnittstellen" – Server lauscht auf allen Interfaces</td></tr>
+    </table>
+  </div>
+
+  <div class="card card-orange">
+    <h3>Port-Bereiche</h3>
+    <table class="data-table" style="margin-bottom:0">
+      <tr><th>Bereich</th><th>Ports</th><th>Typ</th></tr>
+      <tr><td style="color:var(--accent)">Well-Known</td><td class="mono">0 – 1023</td><td>Standarddienste (HTTP:80, HTTPS:443, SSH:22 …)</td></tr>
+      <tr><td style="color:var(--yellow)">Registered</td><td class="mono">1024 – 49151</td><td>Bekannte Anwendungen – hier liegt Port 25565!</td></tr>
+      <tr><td style="color:var(--green)">Ephemeral (Windows)</td><td class="mono">49152 – 65535</td><td>Dynamische Quellports (Client-Verbindungen)</td></tr>
+      <tr><td style="color:var(--green)">Ephemeral (Linux)</td><td class="mono">32768 – 60999</td><td>Dynamische Quellports (konfigurierbar)</td></tr>
+    </table>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-outline" onclick="goTo(prevStep)">← Zurück</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+  let cur=0, prevStep=0, quizScore=0, quizAnswered=0;
+  const totalQ=4;
+
+  const qOk=[
+    "Richtig! PAT erstellt Einträge nur bei ausgehenden Verbindungen. Ein Minecraft Server wartet passiv – ohne Tabelleneintrag kann der Router eingehende Pakete nicht zuordnen.",
+    "Korrekt! Port-Weiterleitung ist Destination-NAT: nur die Ziel-IP ändert sich. Source und Ports bleiben unverändert.",
+    "Genau! DynDNS ist der Kleber zwischen der wechselnden öffentlichen IP und einem festen, merkbaren Hostnamen.",
+    "Richtig! DHCP könnte dem Server morgen eine andere IP geben – die Port-Weiterleitung würde dann ins Leere zeigen."
+  ];
+  const qFail=[
+    "Nicht korrekt. Das Problem ist die Richtung: PAT ist ausgehend orientiert. Ein Server braucht eingehende Erreichbarkeit, für die es keine dynamischen PAT-Einträge gibt.",
+    "Falsch. Die Source bleibt identisch – der Router kennt die echte Source-IP des Freundes und leitet die Antwort dorthin zurück.",
+    "Leider falsch. DynDNS ändert die IP nicht – der Anbieter vergibt weiterhin dynamische IPs. DynDNS speichert nur die aktuelle IP hinter einem festen Namen.",
+    "Nicht ganz. Minecraft selbst ist die IP-Adresse egal. Das Problem ist die Port-Weiterleitung im Router, die auf eine bestimmte private IP zeigt."
+  ];
+
+  function goTo(n){
+    document.getElementById('s'+cur).classList.remove('active');
+    document.querySelectorAll('.step-tab')[cur].classList.remove('active');
+    if(cur<n&&n<7) document.querySelectorAll('.step-tab')[cur].classList.add('done');
+    prevStep=cur; cur=n;
+    document.getElementById('s'+cur).classList.add('active');
+    document.querySelectorAll('.step-tab')[cur].classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function ans(qi,oi,correct){
+    const qEl=document.getElementById('q'+qi);
+    if(qEl.classList.contains('answered')) return;
+    qEl.classList.add('answered');
+    const opts=qEl.querySelectorAll('.quiz-option');
+    opts.forEach(o=>o.classList.add('answered'));
+    opts[oi].classList.add(correct?'correct':'wrong');
+    if(!correct) opts.forEach(o=>{if(o.onclick.toString().includes('true')) o.classList.add('correct');});
+    const fb=document.getElementById('fb'+qi);
+    fb.classList.add('show');
+    if(correct){quizScore++;fb.className='quiz-feedback show ok';fb.textContent='✓ '+qOk[qi];}
+    else{fb.className='quiz-feedback show err';fb.textContent='✗ '+qFail[qi];}
+    quizAnswered++;
+    if(quizAnswered===totalQ){
+      document.getElementById('quiz-score-bar').style.display='block';
+      document.getElementById('quiz-score-text').innerHTML=`Quiz: <span style="color:var(--mc);font-size:1.2em">${quizScore}/${totalQ}</span> richtig`;
+      document.getElementById('next-result-btn').style.display='inline-flex';
+    }
+  }
+
+  function checkFill(){
+    const ids=['p2_src','p2_dst','p3_src','p3_dst','p4_src','p4_dst','p5_src','p5_dst'];
+    let ok=0;
+    ids.forEach(id=>{
+      const el=document.getElementById(id);
+      const val=el.value.trim().toLowerCase().replace(/\s/g,'');
+      el.classList.remove('correct','wrong');
+      if(val===el.dataset.answer.toLowerCase()){el.classList.add('correct');ok++;}
+      else el.classList.add('wrong');
+    });
+    const fb=document.getElementById('fill-feedback');
+    fb.style.display='block';
+    if(ok===ids.length){
+      fb.style.cssText='display:block;padding:14px;border-radius:10px;margin-bottom:16px;font-family:var(--mono);font-size:13px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)';
+      fb.textContent='✓ Perfekt! Alle Felder korrekt – du verstehst den vollständigen Paketweg!';
+      document.getElementById('next-result-btn').style.display='inline-flex';
+    } else {
+      fb.style.cssText='display:block;padding:14px;border-radius:10px;margin-bottom:16px;font-family:var(--mono);font-size:13px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5';
+      fb.textContent=`${ok}/${ids.length} Felder korrekt. Schau dir die roten Felder an – vergleiche mit dem Paketweg-Tab.`;
+    }
+  }
+
+  function showSolution(){
+    const sol={p2_src:'85.10.20.5:54321',p2_dst:'91.48.77.200:25565',p3_src:'85.10.20.5:54321',p3_dst:'192.168.1.100:25565',p4_src:'91.48.77.200:25565',p4_dst:'85.10.20.5:54321',p5_src:'91.48.77.200:25565',p5_dst:'192.168.2.50:54321'};
+    Object.entries(sol).forEach(([id,v])=>{const el=document.getElementById(id);el.value=v;el.classList.add('correct');});
+    document.getElementById('next-result-btn').style.display='inline-flex';
+  }
+
+  function showResult(){
+    const c=document.getElementById('scoreCircle'),n=document.getElementById('scoreNum');
+    n.textContent=quizScore;
+    const p=quizScore/totalQ;
+    if(p>=.75){c.style.borderColor='var(--green)';n.style.color='var(--green)';document.getElementById('scoreMsgEl').textContent='🎉 Ausgezeichnet! Du beherrschst Minecraft-Netzwerke vollständig.';}
+    else if(p>=.5){c.style.borderColor='var(--yellow)';c.style.background='rgba(245,158,11,.08)';n.style.color='var(--yellow)';document.getElementById('scoreMsgEl').textContent='👍 Gut! Noch ein paar Details – dann klappt es perfekt.';}
+    else{c.style.borderColor='var(--red)';c.style.background='rgba(239,68,68,.08)';n.style.color='var(--red)';document.getElementById('scoreMsgEl').textContent='📚 Geh die Abschnitte nochmal durch – besonders Port-Weiterleitung und DynDNS.';}
+    goTo(6);
+  }
+
+  function restart(){
+    quizScore=0;quizAnswered=0;
+    for(let i=0;i<totalQ;i++){
+      const q=document.getElementById('q'+i);
+      q.classList.remove('answered');
+      q.querySelectorAll('.quiz-option').forEach(o=>o.classList.remove('correct','wrong','answered'));
+      const fb=document.getElementById('fb'+i);fb.classList.remove('show','ok','err');fb.textContent='';
+    }
+    document.getElementById('quiz-score-bar').style.display='none';
+    document.getElementById('next-result-btn').style.display='none';
+    ['p2_src','p2_dst','p3_src','p3_dst','p4_src','p4_dst','p5_src','p5_dst'].forEach(id=>{
+      const el=document.getElementById(id);el.value='';el.classList.remove('correct','wrong');
+    });
+    document.getElementById('fill-feedback').style.display='none';
+    document.querySelectorAll('.step-tab').forEach(t=>t.classList.remove('done'));
+    cur=0;prevStep=0;
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.step-tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('s0').classList.add('active');
+    document.querySelectorAll('.step-tab')[0].classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+</script>
+</body>
+</html>
