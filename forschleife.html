@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For-Schleifen Lernplattform – FI Systemintegration</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f78166;
+    --accent2: #79c0ff;
+    --accent3: #56d364;
+    --accent4: #d2a8ff;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --warning: #e3b341;
+    --code-bg: #0d1117;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === HEADER === */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+  .header-logo {
+    font-size: 1.1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-badge {
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .progress-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .progress-label { font-size: 0.8rem; color: var(--muted); }
+  .progress-track {
+    width: 200px;
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent3), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* === LAYOUT === */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 1rem;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.6rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--muted);
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent2);
+    background: rgba(121,192,255,0.07);
+    border-left-color: var(--accent2);
+  }
+  .nav-item.completed { color: var(--accent3); }
+  .nav-icon { width: 18px; text-align: center; font-size: 0.9rem; }
+  .nav-check { margin-left: auto; color: var(--accent3); font-size: 0.8rem; }
+
+  /* === MAIN CONTENT === */
+  .main {
+    padding: 2.5rem;
+    max-width: 860px;
+  }
+
+  .page { display: none; animation: fadeIn 0.3s ease; }
+  .page.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* === TYPOGRAPHY === */
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 2rem 0 1rem;
+  }
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem;
+    color: var(--accent2);
+  }
+  p { color: #c9d1d9; line-height: 1.7; margin-bottom: 1rem; font-size: 0.95rem; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
+
+  /* === TAGS === */
+  .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+  .tag-blue { background: rgba(121,192,255,0.15); color: var(--accent2); border: 1px solid rgba(121,192,255,0.3); }
+  .tag-green { background: rgba(86,211,100,0.15); color: var(--accent3); border: 1px solid rgba(86,211,100,0.3); }
+  .tag-red { background: rgba(247,129,102,0.15); color: var(--accent); border: 1px solid rgba(247,129,102,0.3); }
+  .tag-purple { background: rgba(210,168,255,0.15); color: var(--accent4); border: 1px solid rgba(210,168,255,0.3); }
+
+  /* === CODE === */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .code-header {
+    background: var(--surface2);
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-dots { display: flex; gap: 6px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .code-body {
+    padding: 1.2rem 1.4rem;
+    font-size: 0.85rem;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+  .kw { color: #ff7b72; }
+  .type { color: #79c0ff; }
+  .num { color: #79c0ff; }
+  .op { color: #ff7b72; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .str { color: #a5d6ff; }
+  .var { color: #e6edf3; }
+  .method { color: #d2a8ff; }
+  .hl { background: rgba(121,192,255,0.1); display: block; margin: 0 -1.4rem; padding: 0 1.4rem; border-left: 3px solid var(--accent2); }
+  .hl-r { background: rgba(247,129,102,0.1); display: block; margin: 0 -1.4rem; padding: 0 1.4rem; border-left: 3px solid var(--accent); }
+
+  /* === CALLOUTS === */
+  .callout {
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    margin: 1rem 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 2px; }
+  .callout-text { font-size: 0.9rem; line-height: 1.6; }
+  .callout-info { background: rgba(121,192,255,0.08); border: 1px solid rgba(121,192,255,0.2); }
+  .callout-warn { background: rgba(227,179,65,0.08); border: 1px solid rgba(227,179,65,0.2); }
+  .callout-tip { background: rgba(86,211,100,0.08); border: 1px solid rgba(86,211,100,0.2); }
+  .callout-error { background: rgba(247,129,102,0.08); border: 1px solid rgba(247,129,102,0.2); }
+
+  /* === ANATOMY === */
+  .anatomy-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    position: relative;
+  }
+  .anatomy-line {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .anatomy-part {
+    position: relative;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+  }
+  .anatomy-part:hover { opacity: 0.8; transform: translateY(-2px); }
+  .anatomy-part.init { background: rgba(247,129,102,0.2); border-color: var(--accent); color: var(--accent); }
+  .anatomy-part.cond { background: rgba(86,211,100,0.2); border-color: var(--accent3); color: var(--accent3); }
+  .anatomy-part.incr { background: rgba(210,168,255,0.2); border-color: var(--accent4); color: var(--accent4); }
+  .anatomy-part.body { background: rgba(121,192,255,0.2); border-color: var(--accent2); color: var(--accent2); }
+  .anatomy-part.static { color: var(--text); }
+  .anatomy-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--text);
+    white-space: nowrap;
+    z-index: 10;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .anatomy-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: var(--border);
+  }
+  .anatomy-part:hover .anatomy-tooltip { display: block; }
+  .legend {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+    font-size: 0.82rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* === STEPPER / ANIMATION === */
+  .stepper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+  .stepper-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .stepper-tab {
+    padding: 0.7rem 1.2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .stepper-tab:hover { color: var(--text); }
+  .stepper-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .stepper-content { padding: 1.5rem; }
+  .stepper-panel { display: none; }
+  .stepper-panel.active { display: block; animation: fadeIn 0.2s ease; }
+
+  /* === TRACE TABLE === */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 1rem 0;
+  }
+  th {
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    transition: background 0.3s;
+  }
+  tr.highlight td { background: rgba(121,192,255,0.1); }
+  .cell-val { color: var(--accent2); font-weight: 600; }
+  .cell-changed { color: var(--accent); font-weight: 700; }
+
+  /* === EXERCISES === */
+  .exercise-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+  .exercise-header {
+    background: var(--surface2);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .exercise-title { font-weight: 700; font-size: 0.95rem; }
+  .exercise-points {
+    font-size: 0.8rem;
+    background: rgba(227,179,65,0.15);
+    color: var(--warning);
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-weight: 700;
+  }
+  .exercise-body { padding: 1.5rem; }
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .option-btn {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    text-align: left;
+    transition: all 0.2s;
+  }
+  .option-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .option-btn.correct { border-color: var(--accent3); background: rgba(86,211,100,0.1); color: var(--accent3); }
+  .option-btn.wrong { border-color: var(--accent); background: rgba(247,129,102,0.1); color: var(--accent); }
+  .option-btn:disabled { cursor: default; }
+  .feedback {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    animation: fadeIn 0.3s ease;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { background: rgba(86,211,100,0.1); border: 1px solid rgba(86,211,100,0.3); color: var(--accent3); }
+  .feedback.wrong { background: rgba(247,129,102,0.1); border: 1px solid rgba(247,129,102,0.3); color: var(--accent); }
+
+  /* === FILL BLANK === */
+  .fill-input {
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    width: 120px;
+    outline: none;
+    transition: border-color 0.2s;
+    display: inline-block;
+  }
+  .fill-input:focus { border-color: var(--accent2); }
+  .fill-input.correct { border-color: var(--accent3); background: rgba(86,211,100,0.1); color: var(--accent3); }
+  .fill-input.wrong { border-color: var(--accent); background: rgba(247,129,102,0.1); color: var(--accent); }
+
+  /* === BUTTONS === */
+  .btn {
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: var(--accent2);
+    color: var(--bg);
+  }
+  .btn-primary:hover { background: #a5d6ff; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+  .btn-success {
+    background: var(--accent3);
+    color: var(--bg);
+  }
+  .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; align-items: center; }
+
+  /* === TRACE ANIMATOR === */
+  .trace-controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .step-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding: 4px 12px;
+    background: var(--surface2);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* === SECTION DIVIDER === */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* === NAV FOOTER === */
+  .page-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* === HERO === */
+  .hero {
+    background: linear-gradient(135deg, rgba(121,192,255,0.05) 0%, rgba(210,168,255,0.05) 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+  }
+  .hero-kpi {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  .kpi-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .kpi-val { font-size: 1.8rem; font-weight: 800; }
+  .kpi-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 700px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 1.5rem; }
+    .hero-kpi { grid-template-columns: 1fr 1fr; }
+    .options-grid { grid-template-columns: 1fr; }
+  }
+  /* === TRACE SPLIT LAYOUT (code beside trace) === */
+  .trace-split {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .trace-split-main { min-width: 0; }
+  .trace-split-code { position: sticky; top: 80px; }
+
+  @media (max-width: 900px) {
+    .trace-split { grid-template-columns: 1fr; }
+    .trace-split-code { position: static; }
+  }
+
+  .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .score-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--warning);
+    font-weight: 700;
+  }
+
+  /* TRACE ANIMATION HIGHLIGHT */
+  @keyframes pulse {
+    0% { background: rgba(121,192,255,0.2); }
+    50% { background: rgba(121,192,255,0.05); }
+    100% { background: rgba(121,192,255,0.2); }
+  }
+  tr.active-row td { animation: pulse 1s infinite; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-badge">FI SI</div>
+    For-Schleifen Lernplattform
+  </div>
+  <div class="progress-bar-wrap">
+    <span class="progress-label">Fortschritt</span>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="score-display" id="scoreDisplay">0 Pkt.</span>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Grundlagen</div>
+    <div class="nav-item active" onclick="showPage('intro')" id="nav-intro">
+      <span class="nav-icon">🏠</span> Einführung
+    </div>
+    <div class="nav-item" onclick="showPage('anatomie')" id="nav-anatomie">
+      <span class="nav-icon">🔬</span> Anatomie der For-Schleife
+    </div>
+    <div class="nav-item" onclick="showPage('ablauf')" id="nav-ablauf">
+      <span class="nav-icon">▶️</span> Schritt-für-Schritt Ablauf
+    </div>
+    <div class="nav-item" onclick="showPage('trace')" id="nav-trace">
+      <span class="nav-icon">📊</span> Variablen verfolgen
+    </div>
+    <div class="sidebar-section">Übungen</div>
+    <div class="nav-item" onclick="showPage('uebung1')" id="nav-uebung1">
+      <span class="nav-icon">✏️</span> Übung 1: Grundlagen
+    </div>
+    <div class="nav-item" onclick="showPage('uebung2')" id="nav-uebung2">
+      <span class="nav-icon">✏️</span> Übung 2: Arrays
+    </div>
+    <div class="sidebar-section">Prüfungsaufgaben</div>
+    <div class="nav-item" onclick="showPage('aufgabe1')" id="nav-aufgabe1">
+      <span class="nav-icon">📋</span> Aufgabe: MemMon
+    </div>
+    <div class="nav-item" onclick="showPage('aufgabe2')" id="nav-aufgabe2">
+      <span class="nav-icon">📋</span> Aufgabe: MaxMax2
+    </div>
+    <div class="nav-item" onclick="showPage('aufgabe3')" id="nav-aufgabe3">
+      <span class="nav-icon">📋</span> Aufgabe: Mittelwerte (i+=3)
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- === PAGE: INTRO === -->
+    <div class="page active" id="page-intro">
+      <div class="badge-row">
+        <span class="tag tag-blue">Lektion 1</span>
+        <span class="tag tag-green">Anfänger</span>
+      </div>
+      <h1>Willkommen zur<br>For-Schleifen Lernplattform 🚀</h1>
+      <p class="subtitle">Speziell entwickelt für die IHK-Prüfung Fachinformatiker Systemintegration</p>
+
+      <div class="hero">
+        <p>Diese Plattform führt dich <strong>Schritt für Schritt</strong> durch das Konzept der For-Schleife – mit interaktiven Animationen, Trace-Tabellen und echten Prüfungsaufgaben. Löse alle Übungen und du wirst die Aufgaben in der IHK-Prüfung sicher meistern!</p>
+        <div class="hero-kpi">
+          <div class="kpi-card">
+            <div class="kpi-val" style="color: var(--accent2)">6</div>
+            <div class="kpi-label">Lektionen</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val" style="color: var(--accent3)">15+</div>
+            <div class="kpi-label">Übungsaufgaben</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val" style="color: var(--accent4)">3</div>
+            <div class="kpi-label">Prüfungsaufgaben</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Was ist eine For-Schleife?</h2>
+      <p>Eine <strong style="color: var(--accent2)">For-Schleife</strong> ist eine Kontrollstruktur, die einen Block von Code <strong>mehrfach wiederholt</strong> – solange eine bestimmte Bedingung erfüllt ist. Sie ist besonders nützlich, wenn du:</p>
+      <ul style="color: #c9d1d9; line-height: 2.2; padding-left: 1.5rem; font-size: 0.95rem;">
+        <li>Alle Elemente eines Arrays durchgehst (z.B. alle RAM-Werte)</li>
+        <li>Berechnungen für viele Werte auf einmal durchführst</li>
+        <li>Summen oder Mittelwerte berechnest</li>
+        <li>Bestimmte Werte suchst (z.B. Maximum)</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">💡</span>
+        <div class="callout-text"><strong>Tipp:</strong> In der IHK-Prüfung wird die For-Schleife fast immer in Verbindung mit Arrays verwendet. Wenn du Arrays und For-Schleifen verstehst, hast du die Programmieraufgaben im Griff!</div>
+      </div>
+
+      <h2>Warum brauchen wir Schleifen?</h2>
+      <p>Stell dir vor, du hast 24 RAM-Werte und möchtest die Summe berechnen. Das Array sieht so aus:</p>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Unser Array mit 24 Stundenwerten</span></div>
+        <div class="code-body">
+<span class="type">int</span>[] <span class="var">werte</span> <span class="op">=</span> {<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>};<br>
+<span class="cmt">// Indizes: 0   1   2   3   4   5   6   7   8   9  10  11 ...</span>
+        </div>
+      </div>
+
+      <p><em>Ohne</em> Schleife müsstest du für die Summe schreiben:</p>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Ohne Schleife – sehr umständlich! 😱</span></div>
+        <div class="code-body">
+<span class="type">int</span>[] <span class="var">werte</span> <span class="op">=</span> {<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>};<br>
+<span class="type">int</span> <span class="var">summe</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="num">0</span>];<br>
+<span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="num">1</span>];<br>
+<span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="num">2</span>];<br>
+<span class="cmt">// ... und so weiter für alle 24 Werte! (21 Zeilen mehr) 😩</span>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Mit Schleife – elegant und kurz! ✅</span></div>
+        <div class="code-body">
+<span class="type">int</span>[] <span class="var">werte</span> <span class="op">=</span> {<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>, <span class="num">33</span>, <span class="num">44</span>, <span class="num">40</span>, <span class="num">52</span>, <span class="num">60</span>, <span class="num">56</span>};<br>
+<span class="type">int</span> <span class="var">summe</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">24</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="var">i</span>];<br>
+}<br>
+<span class="cmt">// Erledigt! Nur 7 Zeilen für alle 24 Werte 🎉</span>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <div></div>
+        <button class="btn btn-primary" onclick="showPage('anatomie')">Weiter: Anatomie der For-Schleife →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: ANATOMIE === -->
+    <div class="page" id="page-anatomie">
+      <div class="badge-row">
+        <span class="tag tag-blue">Lektion 2</span>
+        <span class="tag tag-green">Grundlagen</span>
+      </div>
+      <h1>Anatomie der<br>For-Schleife 🔬</h1>
+      <p class="subtitle">Verstehe jeden Teil einer For-Schleife im Detail</p>
+
+      <p>Eine For-Schleife besteht aus <strong>4 Teilen</strong>. Fahre mit der Maus über die farbig markierten Teile unten, um zu verstehen, was jeder Teil macht!</p>
+
+      <div class="anatomy-wrap">
+        <div class="anatomy-line">
+          <span class="anatomy-part static kw">for</span>
+          <span class="anatomy-part static">&nbsp;(&nbsp;</span>
+          <span class="anatomy-part init">int i = 0<div class="anatomy-tooltip">① Initialisierung: Startwert<br>Die Zählvariable i startet bei 0</div></span>
+          <span class="anatomy-part static">&nbsp;;&nbsp;</span>
+          <span class="anatomy-part cond">i &lt; 24<div class="anatomy-tooltip">② Bedingung: Wann weiter?<br>Schleife läuft, solange i kleiner 24 ist</div></span>
+          <span class="anatomy-part static">&nbsp;;&nbsp;</span>
+          <span class="anatomy-part incr">i++<div class="anatomy-tooltip">③ Inkrement: Was passiert nach jedem Durchlauf?<br>i++ bedeutet: i = i + 1</div></span>
+          <span class="anatomy-part static">&nbsp;)</span>
+        </div>
+        <br>
+        <div class="anatomy-line">
+          <span class="anatomy-part static">{</span>
+        </div>
+        <br>
+        <div class="anatomy-line" style="padding-left: 2rem;">
+          <span class="anatomy-part body">sumLast = sumLast + maxRAM[i];<div class="anatomy-tooltip">④ Schleifenkörper: Was wird wiederholt?<br>Dieser Code läuft 24 Mal (i = 0, 1, 2, ... 23)</div></span>
+        </div>
+        <br>
+        <div class="anatomy-line">
+          <span class="anatomy-part static">}</span>
+        </div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background: var(--accent)"></div><span style="font-family: Syne; font-size: 0.8rem; color: var(--muted)">① Initialisierung</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--accent3)"></div><span style="font-family: Syne; font-size: 0.8rem; color: var(--muted)">② Bedingung</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--accent4)"></div><span style="font-family: Syne; font-size: 0.8rem; color: var(--muted)">③ Inkrement</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background: var(--accent2)"></div><span style="font-family: Syne; font-size: 0.8rem; color: var(--muted)">④ Schleifenkörper</span></div>
+        </div>
+      </div>
+
+      <h2>Die 4 Teile im Detail</h2>
+
+      <div class="stepper">
+        <div class="stepper-tabs">
+          <div class="stepper-tab active" onclick="switchTab('anat', 0)">① Initialisierung</div>
+          <div class="stepper-tab" onclick="switchTab('anat', 1)">② Bedingung</div>
+          <div class="stepper-tab" onclick="switchTab('anat', 2)">③ Inkrement</div>
+          <div class="stepper-tab" onclick="switchTab('anat', 3)">④ Schleifenkörper</div>
+        </div>
+        <div class="stepper-content">
+          <div class="stepper-panel active" id="anat-0">
+            <h3 style="color: var(--accent)">① Initialisierung: <code style="font-size:0.9rem">int i = 0</code></h3>
+            <p>Hier wird die <strong>Zählvariable</strong> erstellt und ihr Startwert gesetzt. Dieser Teil wird <em>nur einmal</em> – ganz am Anfang – ausgeführt.</p>
+            <div class="callout callout-info">
+              <span class="callout-icon">📌</span>
+              <div class="callout-text"><strong>Wichtig:</strong> Wir beginnen normalerweise bei <code>0</code>, weil Array-Indizes in C# bei 0 starten! Das erste Element eines Arrays heißt <code>array[0]</code>, nicht <code>array[1]</code>.</div>
+            </div>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Beispiele</span></div>
+              <div class="code-body">
+<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>   <span class="cmt">// Standard: von 0 starten</span><br>
+<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">1</span>   <span class="cmt">// Von 1 starten (z.B. für Anzahl-Berechnungen)</span><br>
+<span class="type">int</span> <span class="var">j</span> <span class="op">=</span> <span class="num">10</span>  <span class="cmt">// Von 10 starten (beliebiger Name und Wert möglich)</span>
+              </div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="anat-1">
+            <h3 style="color: var(--accent3)">② Bedingung: <code style="font-size:0.9rem">i &lt; 24</code></h3>
+            <p>Die Bedingung wird <em>vor jedem Durchlauf</em> geprüft. Ist sie <strong style="color: var(--accent3)">true (wahr)</strong>, wird der Schleifenkörper ausgeführt. Ist sie <strong style="color: var(--accent)">false (falsch)</strong>, stoppt die Schleife.</p>
+            <table>
+              <tr><th>Bedingung</th><th>Bedeutung</th><th>Beispiel</th></tr>
+              <tr><td><code style="color: var(--accent2)">i &lt; 24</code></td><td>i ist kleiner als 24</td><td>läuft für i = 0, 1, 2, ... 23</td></tr>
+              <tr><td><code style="color: var(--accent2)">i &lt;= 23</code></td><td>i ist kleiner gleich 23</td><td>gleich wie oben!</td></tr>
+              <tr><td><code style="color: var(--accent2)">i &lt; array.Length</code></td><td>Arraylänge automatisch</td><td>sicherer! kein "magischer" Wert</td></tr>
+            </table>
+            <div class="callout callout-warn">
+              <span class="callout-icon">⚠️</span>
+              <div class="callout-text"><strong>Häufiger Fehler:</strong> <code>i &lt;= 24</code> statt <code>i &lt; 24</code> – dann versucht die Schleife auf <code>array[24]</code> zuzugreifen, was einen Fehler verursacht, weil es nur Indizes 0–23 gibt!</div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="anat-2">
+            <h3 style="color: var(--accent4)">③ Inkrement: <code style="font-size:0.9rem">i++</code></h3>
+            <p>Dieser Teil wird <em>nach jedem Durchlauf</em> ausgeführt. Er sorgt dafür, dass die Schleife irgendwann endet (Bedingung wird false).</p>
+            <table>
+              <tr><th>Ausdruck</th><th>Bedeutung</th></tr>
+              <tr><td><code style="color: var(--accent2)">i++</code></td><td>i = i + 1 (um 1 erhöhen)</td></tr>
+              <tr><td><code style="color: var(--accent2)">i--</code></td><td>i = i - 1 (um 1 verringern)</td></tr>
+              <tr><td><code style="color: var(--accent2)">i += 2</code></td><td>i = i + 2 (um 2 erhöhen)</td></tr>
+              <tr><td><code style="color: var(--accent2)">i *= 2</code></td><td>i = i * 2 (verdoppeln)</td></tr>
+            </table>
+          </div>
+          <div class="stepper-panel" id="anat-3">
+            <h3 style="color: var(--accent2)">④ Schleifenkörper</h3>
+            <p>Der Schleifenkörper steht zwischen <code>{</code> und <code>}</code>. Alles darin wird bei jedem Durchlauf ausgeführt. Die Variable <code>i</code> nimmt dabei immer den aktuellen Wert an.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>So greifst du auf Array-Elemente zu</span></div>
+              <div class="code-body">
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">5</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">// i nimmt die Werte 0, 1, 2, 3, 4 an</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cmt">// array[i] gibt das jeweilige Element zurück</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="var">array</span>[<span class="var">i</span>]);<br>
+}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('intro')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('ablauf')">Weiter: Ablauf →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: ABLAUF === -->
+    <div class="page" id="page-ablauf">
+      <div class="badge-row">
+        <span class="tag tag-blue">Lektion 3</span>
+        <span class="tag tag-purple">Animiert</span>
+      </div>
+      <h1>Schritt-für-Schritt<br>Ablauf ▶️</h1>
+      <p class="subtitle">Sieh wie eine For-Schleife Schritt für Schritt ausgeführt wird</p>
+
+      <p>Klicke auf <strong>„Nächster Schritt"</strong>, um den Ablauf der Schleife zu verfolgen. Beobachte, wie sich <code>i</code> und <code>summe</code> bei jedem Durchlauf verändern.</p>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">🔄</span>
+        <div class="callout-text">Die Schleife durchläuft immer diese Reihenfolge: <strong>Initialisierung → Bedingung prüfen → Körper ausführen → Inkrement → Bedingung prüfen → ...</strong></div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Beispiel: Summe von 5 Werten berechnen</span></div>
+        <div class="code-body" id="animCode">
+<span id="anim-init"><span class="type">int</span>[] <span class="var">werte</span> <span class="op">=</span> {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};</span><br>
+<span id="anim-sumvar"><span class="type">int</span> <span class="var">summe</span> <span class="op">=</span> <span class="num">0</span>;</span><br>
+<span id="anim-for"><span class="kw">for</span> (<span id="anim-i-init"><span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span></span>; <span id="anim-cond"><span class="var">i</span> <span class="op">&lt;</span> <span class="num">5</span></span>; <span id="anim-incr"><span class="var">i</span><span class="op">++</span></span>)</span><br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span id="anim-body"><span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="var">i</span>];</span><br>
+}<br>
+<span id="anim-output"><span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="var">summe</span>);</span>
+        </div>
+      </div>
+
+      <div class="trace-controls">
+        <button class="btn btn-secondary" onclick="animPrev()">← Zurück</button>
+        <button class="btn btn-primary" onclick="animNext()">Nächster Schritt →</button>
+        <button class="btn btn-secondary" onclick="animReset()">↺ Neustart</button>
+        <span class="step-counter" id="stepCounter">Schritt 0 / 22</span>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1rem 0;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Aktuelle Variablenwerte</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+          <div style="text-align: center;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 1.4rem; font-weight: 700; color: var(--accent)" id="var-i">–</div>
+            <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">i</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 1.4rem; font-weight: 700; color: var(--accent2)" id="var-summe">–</div>
+            <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">summe</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-family: 'JetBrains Mono'; font-size: 1.4rem; font-weight: 700; color: var(--accent3)" id="var-cond">–</div>
+            <div style="font-size: 0.75rem; color: var(--muted); margin-top: 4px;">Bedingung (i&lt;5)</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="anim-explanation" style="background: rgba(121,192,255,0.07); border: 1px solid rgba(121,192,255,0.2); border-radius: 8px; padding: 1rem 1.2rem; font-size: 0.9rem; min-height: 60px; line-height: 1.6;">
+        Drücke <strong>„Nächster Schritt"</strong>, um mit der Animation zu beginnen.
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('anatomie')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('trace')">Weiter: Trace-Tabelle →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: TRACE TABLE === -->
+    <div class="page" id="page-trace">
+      <div class="badge-row">
+        <span class="tag tag-blue">Lektion 4</span>
+        <span class="tag tag-purple">Interaktiv</span>
+      </div>
+      <h1>Variablen verfolgen<br>mit der Trace-Tabelle 📊</h1>
+      <p class="subtitle">Das wichtigste Werkzeug für die Prüfung</p>
+
+      <p>In der IHK-Prüfung sollst du Variablenwerte Schritt für Schritt in einer Tabelle eintragen. Das nennt man <strong>Trace-Tabelle</strong>. Übe das hier!</p>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Zu verfolgende Schleife</span></div>
+        <div class="code-body">
+<span class="type">int</span> <span class="var">summe</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="type">int</span>[] <span class="var">werte</span> <span class="op">=</span> {<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>};<br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">3</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">summe</span> <span class="op">=</span> <span class="var">summe</span> <span class="op">+</span> <span class="var">werte</span>[<span class="var">i</span>];<br>
+}
+        </div>
+      </div>
+
+      <p>Fülle die Tabelle aus! Beachte die richtige Reihenfolge: Zuerst wird die <strong>Bedingung geprüft</strong>, dann erst der Schleifenkörper ausgeführt und der Wert verändert.</p>
+
+      <table id="traceTable">
+        <tr>
+          <th>i</th>
+          <th>Bedingung i&lt;3 geprüft</th>
+          <th>werte[i]</th>
+          <th>summe (danach)</th>
+        </tr>
+        <tr>
+          <td>–</td>
+          <td style="color: var(--muted); font-size:0.8rem">noch nicht gestartet</td>
+          <td>–</td>
+          <td><input class="fill-input" id="t0" placeholder="?" style="width:70px"></td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td><input class="fill-input" id="tc1" placeholder="?" style="width:70px"></td>
+          <td>5</td>
+          <td><input class="fill-input" id="t1" placeholder="?" style="width:70px"></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><input class="fill-input" id="tc2" placeholder="?" style="width:70px"></td>
+          <td>10</td>
+          <td><input class="fill-input" id="t2" placeholder="?" style="width:70px"></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><input class="fill-input" id="tc3" placeholder="?" style="width:70px"></td>
+          <td>15</td>
+          <td><input class="fill-input" id="t3" placeholder="?" style="width:70px"></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><input class="fill-input" id="tc4" placeholder="?" style="width:70px"></td>
+          <td>–</td>
+          <td style="color: var(--muted); font-size:0.8rem">Schleife endet</td>
+        </tr>
+      </table>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="checkTrace()">Antworten prüfen ✓</button>
+        <button class="btn btn-secondary" onclick="resetTrace()">↺ Zurücksetzen</button>
+      </div>
+      <div id="trace-feedback" class="feedback"></div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('ablauf')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('uebung1')">Weiter: Übungen →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: ÜBUNG 1 === -->
+    <div class="page" id="page-uebung1">
+      <div class="badge-row">
+        <span class="tag tag-red">Übung</span>
+        <span class="tag tag-green">Grundlagen</span>
+      </div>
+      <h1>Übung 1: Grundlagen ✏️</h1>
+      <p class="subtitle">Teste dein Verständnis der For-Schleife</p>
+
+      <!-- Q1 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 1: Wie oft läuft die Schleife?</span>
+          <span class="exercise-points">2 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div></div>
+            <div class="code-body"><span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">5</span>; <span class="var">i</span><span class="op">++</span>) { ... }</div>
+          </div>
+          <p>Wie viele Male wird der Schleifenkörper ausgeführt?</p>
+          <div class="options-grid" id="q1-options">
+            <button class="option-btn" onclick="checkMC('q1', this, false)">4 Mal</button>
+            <button class="option-btn" onclick="checkMC('q1', this, true)">5 Mal</button>
+            <button class="option-btn" onclick="checkMC('q1', this, false)">6 Mal</button>
+            <button class="option-btn" onclick="checkMC('q1', this, false)">Unendlich</button>
+          </div>
+          <div id="q1-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Die Schleife läuft für i = 0, 1, 2, 3, 4 — das sind genau 5 Durchläufe. Merke: Bei <code>i &lt; n</code> beginnend mit 0 gibt es genau <strong>n Durchläufe</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 2: Was bedeutet i++?</span>
+          <span class="exercise-points">2 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Was bewirkt <code>i++</code> in der For-Schleife?</p>
+          <div class="options-grid" id="q2-options">
+            <button class="option-btn" onclick="checkMC('q2', this, false)">i wird um 2 erhöht</button>
+            <button class="option-btn" onclick="checkMC('q2', this, false)">i wird auf 0 gesetzt</button>
+            <button class="option-btn" onclick="checkMC('q2', this, true)">i wird um 1 erhöht</button>
+            <button class="option-btn" onclick="checkMC('q2', this, false)">i wird verdoppelt</button>
+          </div>
+          <div id="q2-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> <code>i++</code> ist eine Kurzform für <code>i = i + 1</code>. Es erhöht i um 1 nach jedem Schleifendurchlauf.
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 3: Welcher Fehler liegt vor?</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <div class="code-block">
+            <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Fehler finden!</span></div>
+            <div class="code-body">
+<span class="type">int</span>[] <span class="var">arr</span> <span class="op">=</span> {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>}; <span class="cmt">// 3 Elemente</span><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;=</span> <span class="num">3</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="var">arr</span>[<span class="var">i</span>]);<br>
+}
+            </div>
+          </div>
+          <p>Was ist der Fehler in diesem Code?</p>
+          <div class="options-grid" id="q3-options">
+            <button class="option-btn" onclick="checkMC('q3', this, false)">i++ ist falsch</button>
+            <button class="option-btn" onclick="checkMC('q3', this, true)"><code>i &lt;= 3</code> erzeugt Index-Fehler</button>
+            <button class="option-btn" onclick="checkMC('q3', this, false)">Array hat zu wenig Elemente</button>
+            <button class="option-btn" onclick="checkMC('q3', this, false)">Console.WriteLine fehlt</button>
+          </div>
+          <div id="q3-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Das Array hat Indizes 0, 1, 2. Mit <code>i &lt;= 3</code> versucht die Schleife auch <code>arr[3]</code> aufzurufen – dieser Index existiert nicht! Es muss <code>i &lt; 3</code> oder besser <code>i &lt; arr.Length</code> heißen.
+          </div>
+        </div>
+      </div>
+
+      <!-- Q4: Fill blank -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 4: Lückentext</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Vervollständige die For-Schleife, die ein Array mit 10 Elementen durchläuft:</p>
+          <div style="background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem 1.4rem; font-family: 'JetBrains Mono'; font-size: 0.88rem; line-height: 2.2;">
+            <span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> = <input class="fill-input" id="fb1" placeholder="?" style="width: 50px">; <span class="var">i</span> &lt; <input class="fill-input" id="fb2" placeholder="?" style="width: 50px">; <span class="var">i</span><input class="fill-input" id="fb3" placeholder="?" style="width: 60px">)
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="checkFillBlank()">Prüfen ✓</button>
+          </div>
+          <div id="fb-feedback" class="feedback"></div>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('trace')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('uebung2')">Weiter: Übung 2 →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: ÜBUNG 2 === -->
+    <div class="page" id="page-uebung2">
+      <div class="badge-row">
+        <span class="tag tag-red">Übung</span>
+        <span class="tag tag-purple">Arrays</span>
+      </div>
+      <h1>Übung 2: Arrays & Schleifen ✏️</h1>
+      <p class="subtitle">Arrays und For-Schleifen kombinieren</p>
+
+      <!-- Array Grundlagen -->
+      <div class="callout callout-info">
+        <span class="callout-icon">📚</span>
+        <div class="callout-text"><strong>Wichtig:</strong> Arrays und For-Schleifen gehören zusammen! Ein Array speichert mehrere Werte unter einem Namen, die For-Schleife verarbeitet sie alle automatisch. Index beginnt immer bei <strong>0</strong>!</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Array-Grundlagen</span></div>
+        <div class="code-body">
+<span class="type">int</span>[] <span class="var">zahlen</span> <span class="op">=</span> {<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>};<br>
+<span class="cmt">// Indizes:    0    1    2    3    4</span><br><br>
+<span class="var">zahlen</span>[<span class="num">0</span>] <span class="op">==</span> <span class="num">10</span>   <span class="cmt">// erstes Element</span><br>
+<span class="var">zahlen</span>[<span class="num">4</span>] <span class="op">==</span> <span class="num">50</span>   <span class="cmt">// letztes Element</span><br>
+<span class="var">zahlen</span>.<span class="method">Length</span> <span class="op">==</span> <span class="num">5</span> <span class="cmt">// Anzahl der Elemente</span>
+        </div>
+      </div>
+
+      <!-- Interactive: Summe berechnen -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Aufgabe: Ersten 3 Werte summieren</span>
+          <span class="exercise-points">5 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Gegeben: <code>int[] data = {12, 8, 15, 3, 9};</code></p>
+          <p>Eine Schleife soll nur die <strong>ersten 3 Werte</strong> (Index 0, 1, 2) summieren. Was ist das Ergebnis?</p>
+          <div class="options-grid" id="q5-options">
+            <button class="option-btn" onclick="checkMC('q5', this, false)">20</button>
+            <button class="option-btn" onclick="checkMC('q5', this, false)">27</button>
+            <button class="option-btn" onclick="checkMC('q5', this, true)">35</button>
+            <button class="option-btn" onclick="checkMC('q5', this, false)">47</button>
+          </div>
+          <div id="q5-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> data[0]=12, data[1]=8, data[2]=15 → Summe = 12+8+15 = <strong>35</strong>. Die Schleife lautet: <code>for (int i = 0; i &lt; 3; i++)</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interaktive Trace Aufgabe für Hälfte -->
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Trace-Aufgabe: Erste und zweite Hälfte</span>
+          <span class="exercise-points">5 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Wie müsste die Bedingung lauten, um nur die <strong>zweite Hälfte</strong> eines Arrays mit 24 Elementen (Indizes 12–23) zu durchlaufen?</p>
+          <div class="options-grid" id="q6-options">
+            <button class="option-btn" onclick="checkMC('q6', this, false)"><code>i = 0; i &lt; 12; i++</code></button>
+            <button class="option-btn" onclick="checkMC('q6', this, true)"><code>i = 12; i &lt; 24; i++</code></button>
+            <button class="option-btn" onclick="checkMC('q6', this, false)"><code>i = 13; i &lt; 24; i++</code></button>
+            <button class="option-btn" onclick="checkMC('q6', this, false)"><code>i = 12; i &lt;= 24; i++</code></button>
+          </div>
+          <div id="q6-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Um von Index 12 bis 23 zu gehen: Initialisierung <code>i = 12</code>, Bedingung <code>i &lt; 24</code>. Das sind genau 12 Durchläufe (12, 13, ..., 23).
+          </div>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('uebung1')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('aufgabe1')">Weiter: Prüfungsaufgabe MemMon →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: AUFGABE 1 (MemMon) === -->
+    <div class="page" id="page-aufgabe1">
+      <div class="badge-row">
+        <span class="tag tag-red">IHK-Aufgabe</span>
+        <span class="tag tag-purple">17 Punkte</span>
+      </div>
+      <h1>Prüfungsaufgabe:<br>Programm „MemMon" 📋</h1>
+      <p class="subtitle">Vervollständige den vorhandenen Programmentwurf</p>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">📝</span>
+        <div class="callout-text"><strong>Aufgabenstellung:</strong> Das Programm MemMon berechnet den Mittelwert aller 24 RAM-Stundenwerte eines Tages sowie die Mittelwerte der ersten und zweiten Tageshälfte (je 12 Werte).</div>
+      </div>
+
+      <h2>Vorhandener Code</h2>
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>MemMon.cs – gegebener Code</span></div>
+        <div class="code-body">
+<span class="type">int</span> <span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;       <span class="cmt">// Summe der Stundenwerte</span><br>
+<span class="type">int</span> <span class="var">mwTag</span> <span class="op">=</span> <span class="num">0</span>;         <span class="cmt">// Mittelwert Tag</span><br>
+<span class="type">int</span> <span class="var">mwVormittag</span> <span class="op">=</span> <span class="num">0</span>;  <span class="cmt">// Mittelwert erste Tageshälfte</span><br>
+<span class="type">int</span> <span class="var">mwNachmittag</span> <span class="op">=</span> <span class="num">0</span>; <span class="cmt">// Mittelwert zweite Tageshälfte</span><br><br>
+<span class="cmt">// Array mit Testdaten</span><br>
+<span class="type">int</span>[] <span class="var">maxRAM20231119</span> <span class="op">=</span> <span class="kw">new</span> <span class="type">int</span>[<span class="num">24</span>]<br>
+{<span class="num">33</span>,<span class="num">44</span>,<span class="num">40</span>,<span class="num">52</span>,<span class="num">60</span>,<span class="num">56</span>,<span class="num">33</span>,<span class="num">44</span>,<span class="num">40</span>,<span class="num">52</span>,<span class="num">60</span>,<span class="num">56</span>,<br>
+&nbsp;<span class="num">33</span>,<span class="num">44</span>,<span class="num">40</span>,<span class="num">52</span>,<span class="num">60</span>,<span class="num">56</span>,<span class="num">33</span>,<span class="num">44</span>,<span class="num">40</span>,<span class="num">52</span>,<span class="num">60</span>,<span class="num">56</span>};<br><br>
+<span class="cmt">// Berechnung Mittelwert Tag (BEREITS GEGEBEN)</span><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">24</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">sumLast</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">+</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>];<br>
+}<br>
+<span class="var">mwTag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">24</span>;<br>
+<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Tag: "</span> <span class="op">+</span> <span class="var">mwTag</span>);
+        </div>
+      </div>
+
+      <h2>Schritt-für-Schritt Lösung</h2>
+
+      <div class="stepper">
+        <div class="stepper-tabs">
+          <div class="stepper-tab active" onclick="switchTab('mem', 0)">① Aufgabe verstehen</div>
+          <div class="stepper-tab" onclick="switchTab('mem', 1)">② Vormittag (0–11)</div>
+          <div class="stepper-tab" onclick="switchTab('mem', 2)">③ Nachmittag (12–23)</div>
+          <div class="stepper-tab" onclick="switchTab('mem', 3)">④ Ausgabe</div>
+          <div class="stepper-tab" onclick="switchTab('mem', 4)">⑤ Vollständig</div>
+        </div>
+        <div class="stepper-content">
+          <div class="stepper-panel active" id="mem-0">
+            <h3>Was müssen wir tun?</h3>
+            <p>Wir haben bereits den Code für den <strong>Tagesmittelwert</strong> (alle 24 Werte). Jetzt müssen wir ergänzen:</p>
+            <ul style="color: #c9d1d9; line-height: 2.4; padding-left: 1.5rem; font-size: 0.9rem;">
+              <li><strong>Erste Hälfte (Vormittag)</strong>: Indizes 0–11 (Stunden 0–11 Uhr = 12 Werte)</li>
+              <li><strong>Zweite Hälfte (Nachmittag)</strong>: Indizes 12–23 (Stunden 12–23 Uhr = 12 Werte)</li>
+              <li><strong>Ausgabe</strong> beider Mittelwerte</li>
+            </ul>
+            <div class="callout callout-tip">
+              <span class="callout-icon">💡</span>
+              <div class="callout-text"><strong>Trick:</strong> Schau dir den bereits gegebenen Code an! Die Schleife für den Tagesmittelwert zeigt dir genau das Muster. Du musst es nur anpassen!</div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mem-1">
+            <h3>Schleife für die erste Tageshälfte (Vormittag)</h3>
+            <p>Wir müssen die Variable <code>sumLast</code> <strong>zurücksetzen</strong>, da wir sie bereits für den Tagesmittelwert benutzt haben!</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Lösung: Vormittag (Indizes 0–11)</span></div>
+              <div class="code-body">
+<span class="cmt">// Wichtig: Variable zurücksetzen!</span><br>
+<span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;<br><br>
+<span class="cmt">// Berechnung Mittelwert erste Tageshälfte</span><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">12</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">sumLast</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">+</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>];<br>
+}<br>
+<span class="var">mwVormittag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">12</span>;
+              </div>
+            </div>
+            <div class="callout callout-warn">
+              <span class="callout-icon">⚠️</span>
+              <div class="callout-text"><strong>Wichtig:</strong> Die Schleife beginnt bei <code>i = 0</code> und endet bei <code>i &lt; 12</code>. Das sind Indizes 0, 1, 2, ..., 11 = 12 Werte. Geteilt wird durch 12!</div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mem-2">
+            <h3>Schleife für die zweite Tageshälfte (Nachmittag)</h3>
+            <p>Hier starten wir bei Index 12 (die 13. Stunde = 12:00 Uhr) und gehen bis Index 23.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Lösung: Nachmittag (Indizes 12–23)</span></div>
+              <div class="code-body">
+<span class="cmt">// Variable zurücksetzen!</span><br>
+<span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;<br><br>
+<span class="cmt">// Berechnung Mittelwert zweite Tageshälfte</span><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">12</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">24</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">sumLast</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">+</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>];<br>
+}<br>
+<span class="var">mwNachmittag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">12</span>;
+              </div>
+            </div>
+            <div class="callout callout-tip">
+              <span class="callout-icon">💡</span>
+              <div class="callout-text"><strong>Vergleich:</strong> Der <strong>einzige Unterschied</strong> zur Vormittags-Schleife ist die Initialisierung: <code>i = 12</code> statt <code>i = 0</code>. Das ist der Trick für „zweite Hälfte"!</div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mem-3">
+            <h3>Ausgabe der Tageshälften-Mittelwerte</h3>
+            <p>„Reihenfolgerichtig" bedeutet: der <strong>größere</strong> Mittelwert soll zuerst ausgegeben werden. Dazu brauchen wir eine <code>if/else</code>-Bedingung, die vergleicht, welcher der beiden Werte größer ist.</p>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Ausgabe – reihenfolgerichtig (größerer Wert zuerst)</span></div>
+              <div class="code-body">
+<span class="cmt">// Mittelwerte für Tageshälften reihenfolgerichtig ausgeben</span><br>
+<span class="kw">if</span> (<span class="var">mwVormittag</span> <span class="op">&gt;=</span> <span class="var">mwNachmittag</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Vormittag: "</span> <span class="op">+</span> <span class="var">mwVormittag</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Nachmittag: "</span> <span class="op">+</span> <span class="var">mwNachmittag</span>);<br>
+}<br>
+<span class="kw">else</span><br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Nachmittag: "</span> <span class="op">+</span> <span class="var">mwNachmittag</span>);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Vormittag: "</span> <span class="op">+</span> <span class="var">mwVormittag</span>);<br>
+}
+              </div>
+            </div>
+            <div class="callout callout-info">
+              <span class="callout-icon">💡</span>
+              <div class="callout-text">
+                <strong>Logik:</strong> Ist <code>mwVormittag &gt;= mwNachmittag</code>? Dann ist der Vormittag gleich groß oder größer → Vormittag zuerst ausgeben.<br>
+                Sonst ist der Nachmittag größer → Nachmittag zuerst ausgeben.<br>
+                <strong>Merke:</strong> Die Reihenfolge der Ausgabe ändert sich, aber beide Werte werden immer ausgegeben!
+              </div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mem-4">
+            <h3>Vollständige Lösung</h3>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>MemMon.cs – vollständig ✅</span></div>
+              <div class="code-body">
+<span class="type">int</span> <span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;  <span class="type">int</span> <span class="var">mwTag</span> <span class="op">=</span> <span class="num">0</span>;  <span class="type">int</span> <span class="var">mwVormittag</span> <span class="op">=</span> <span class="num">0</span>;  <span class="type">int</span> <span class="var">mwNachmittag</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="type">int</span>[] <span class="var">maxRAM20231119</span> <span class="op">=</span> <span class="kw">new</span> <span class="type">int</span>[<span class="num">24</span>]{<span class="num">33</span>,<span class="num">44</span>,<span class="num">40</span>,<span class="num">52</span>,<span class="num">60</span>,<span class="num">56</span>,...};<br><br>
+<span class="cmt">// Mittelwert Tag</span><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">24</span>; <span class="var">i</span><span class="op">++</span>) { <span class="var">sumLast</span> <span class="op">+=</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>]; }<br>
+<span class="var">mwTag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">24</span>;<br>
+<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Tag: "</span> <span class="op">+</span> <span class="var">mwTag</span>);<br><br>
+<span class="cmt">// Mittelwert Vormittag (Stunden 0–11)</span><br>
+<span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">12</span>; <span class="var">i</span><span class="op">++</span>) { <span class="var">sumLast</span> <span class="op">+=</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>]; }<br>
+<span class="var">mwVormittag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">12</span>;<br><br>
+<span class="cmt">// Mittelwert Nachmittag (Stunden 12–23)</span><br>
+<span class="var">sumLast</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">12</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">24</span>; <span class="var">i</span><span class="op">++</span>) { <span class="var">sumLast</span> <span class="op">+=</span> <span class="var">maxRAM20231119</span>[<span class="var">i</span>]; }<br>
+<span class="var">mwNachmittag</span> <span class="op">=</span> <span class="var">sumLast</span> <span class="op">/</span> <span class="num">12</span>;<br><br>
+<span class="cmt">// Ausgabe</span><br>
+<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Vormittag: "</span> <span class="op">+</span> <span class="var">mwVormittag</span>);<br>
+<span class="method">Console</span>.<span class="method">WriteLine</span>(<span class="str">"Mittelwert Nachmittag: "</span> <span class="op">+</span> <span class="var">mwNachmittag</span>);
+              </div>
+            </div>
+            <div class="callout callout-tip">
+              <span class="callout-icon">🎯</span>
+              <div class="callout-text">
+                <strong>Ergebnis mit den Testdaten:</strong><br>
+                Alle Werte: 33,44,40,52,60,56 (wiederholt 4x) → Tagessumme = 1128 → <strong>mwTag = 47</strong><br>
+                Vormittag (0–11): 33+44+40+52+60+56+33+44+40+52+60+56 = 570 → <strong>mwVormittag = 47</strong><br>
+                Nachmittag (12–23): identisch → <strong>mwNachmittag = 47</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini Quiz -->
+      <h2>Selbsttest</h2>
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage: Warum muss sumLast zurückgesetzt werden?</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <div class="options-grid" id="qm1-options">
+            <button class="option-btn" onclick="checkMC('qm1', this, false)">Das ist nicht nötig</button>
+            <button class="option-btn" onclick="checkMC('qm1', this, true)">Es enthält noch die Tagessumme, die die neuen Berechnungen verfälschen würde</button>
+            <button class="option-btn" onclick="checkMC('qm1', this, false)">C# macht das automatisch</button>
+            <button class="option-btn" onclick="checkMC('qm1', this, false)">Die Variable muss neu erstellt werden</button>
+          </div>
+          <div id="qm1-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Nach der ersten Schleife enthält <code>sumLast</code> die Summe aller 24 Werte (z.B. 1128). Wenn wir diese Variable nicht auf 0 zurücksetzen, wird bei der Vormittags-Berechnung die alte Tagessumme mitgezählt – das Ergebnis wäre komplett falsch!
+          </div>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('uebung2')">← Zurück</button>
+        <button class="btn btn-primary" onclick="showPage('aufgabe2')">Weiter: Aufgabe MaxMax2 →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: AUFGABE 2 (MaxMax2) === -->
+    <div class="page" id="page-aufgabe2">
+      <div class="badge-row">
+        <span class="tag tag-red">IHK-Aufgabe</span>
+        <span class="tag tag-purple">10 Punkte</span>
+      </div>
+      <h1>Prüfungsaufgabe:<br>Methode MaxMax2() 📋</h1>
+      <p class="subtitle">Trace-Tabelle für verschachtelte If-Bedingungen in einer For-Schleife</p>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">📝</span>
+        <div class="callout-text"><strong>Aufgabenstellung:</strong> Vervollständige die Trace-Tabelle: Welche Werte haben <code>max</code> und <code>max2</code> nach jedem Schritt der Schleife?</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>MaxMax2() – zu analysierender Code</span></div>
+        <div class="code-body">
+<span class="type">int</span>[] <span class="var">CPULoad</span> <span class="op">=</span> {<span class="num">12</span>, <span class="num">10</span>, <span class="num">40</span>, <span class="num">73</span>, <span class="num">33</span>, <span class="num">60</span>};<br>
+<span class="type">int</span> <span class="var">max</span> <span class="op">=</span> <span class="num">0</span>;   <span class="cmt">// höchste CPU-Auslastung</span><br>
+<span class="type">int</span> <span class="var">max2</span> <span class="op">=</span> <span class="num">0</span>;  <span class="cmt">// zweithöchste CPU-Auslastung</span><br><br>
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="var">CPULoad</span>.<span class="method">Length</span>; <span class="var">i</span><span class="op">++</span>)<br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">max2</span> <span class="op">=</span> <span class="var">max</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">max</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">else if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max2</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">max</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];<br>
+}
+        </div>
+      </div>
+
+      <h2>Schritt-für-Schritt: Die Logik verstehen</h2>
+
+      <div class="stepper">
+        <div class="stepper-tabs">
+          <div class="stepper-tab active" onclick="switchTab('mm', 0)">① Logik erklären</div>
+          <div class="stepper-tab" onclick="switchTab('mm', 1)">② Trace verfolgen</div>
+          <div class="stepper-tab" onclick="switchTab('mm', 2)">③ Den Fehler finden</div>
+        </div>
+        <div class="stepper-content">
+          <div class="stepper-panel active" id="mm-0">
+            <h3>Wie funktioniert der Algorithmus?</h3>
+            <p>Der Algorithmus durchläuft alle CPU-Werte und soll das <strong>Maximum</strong> und das <strong>zweithöchste Maximum</strong> finden. Für jeden Wert gibt es drei mögliche Fälle:</p>
+            <div style="background: var(--surface2); border-radius: 8px; padding: 1.2rem; margin: 1rem 0; font-size: 0.88rem;">
+              <div style="margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);">
+                <strong style="color: var(--accent)">Fall 1 – Wenn CPULoad[i] &gt; max:</strong><br>
+                <span style="color: var(--muted)">→ Neues Maximum gefunden! Das bisherige max wird zum neuen max2 (es war ja das zweithöchste), und der aktuelle Wert wird das neue max.</span>
+              </div>
+              <div style="margin-bottom: 0.8rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border);">
+                <strong style="color: var(--accent3)">Fall 2 – Wenn CPULoad[i] &gt; max2 (aber nicht &gt; max):</strong><br>
+                <span style="color: var(--muted)">→ Wert ist nicht das neue Maximum, aber größer als das bisherige Zweithöchste. Was sollte dann mit max2 passieren?</span>
+              </div>
+              <div>
+                <strong style="color: var(--muted)">Fall 3 – Sonst:</strong><br>
+                <span style="color: var(--muted)">→ Wert ist weder höchster noch zweithöchster. Nichts passiert.</span>
+              </div>
+            </div>
+            <div class="callout callout-info">
+              <span class="callout-icon">🔍</span>
+              <div class="callout-text">Führe zuerst den <strong>Trace (Tab ②)</strong> durch — verfolge Schritt für Schritt, was der Code tatsächlich macht. Vergleiche dann mit dem, was er tun <em>sollte</em>. Der Unterschied zeigt dir den Fehler!</div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mm-1">
+            <h3>Trace-Tabelle – animiert</h3>
+            <p>Klicke auf „Nächster Schritt" und verfolge genau, was der Code bei jedem Wert macht. Beobachte dabei besonders <code>max</code> und <code>max2</code>.</p>
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start;">
+              <div>
+                <div class="trace-controls">
+                  <button class="btn btn-secondary" onclick="mmPrev()">← Zurück</button>
+                  <button class="btn btn-primary" onclick="mmNext()">Nächster Schritt →</button>
+                  <button class="btn btn-secondary" onclick="mmReset()">↺ Neu</button>
+                  <span class="step-counter" id="mmStepCounter">i = –</span>
+                </div>
+                <table id="mmTable" style="margin-top:0.75rem;">
+                  <tr>
+                    <th>i</th>
+                    <th>CPULoad[i]</th>
+                    <th>max</th>
+                    <th>max2</th>
+                    <th>Was passiert?</th>
+                  </tr>
+                  <tr id="mmr-start"><td>Start</td><td>–</td><td class="cell-val">0</td><td class="cell-val">0</td><td style="color: var(--muted)">Initialisierung</td></tr>
+                  <tr id="mmr-0"><td>0</td><td>12</td><td id="mm-max-0">?</td><td id="mm-max2-0">?</td><td id="mm-why-0" style="color: var(--muted)">–</td></tr>
+                  <tr id="mmr-1"><td>1</td><td>10</td><td id="mm-max-1">?</td><td id="mm-max2-1">?</td><td id="mm-why-1" style="color: var(--muted)">–</td></tr>
+                  <tr id="mmr-2"><td>2</td><td>40</td><td id="mm-max-2">?</td><td id="mm-max2-2">?</td><td id="mm-why-2" style="color: var(--muted)">–</td></tr>
+                  <tr id="mmr-3"><td>3</td><td>73</td><td id="mm-max-3">?</td><td id="mm-max2-3">?</td><td id="mm-why-3" style="color: var(--muted)">–</td></tr>
+                  <tr id="mmr-4"><td>4</td><td>33</td><td id="mm-max-4">?</td><td id="mm-max2-4">?</td><td id="mm-why-4" style="color: var(--muted)">–</td></tr>
+                  <tr id="mmr-5"><td>5</td><td>60</td><td id="mm-max-5">?</td><td id="mm-max2-5">?</td><td id="mm-why-5" style="color: var(--muted)">–</td></tr>
+                </table>
+                <div id="mm-explanation" style="background: rgba(247,129,102,0.07); border: 1px solid rgba(247,129,102,0.2); border-radius: 8px; padding: 1rem; margin-top: 0.75rem; font-size: 0.88rem; min-height: 60px;">
+                  Drücke „Nächster Schritt".
+                </div>
+              </div>
+              <!-- Code panel alongside trace -->
+              <div style="position: sticky; top: 80px;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Code – zur Referenz</div>
+                <div class="code-block" style="margin:0; font-size: 0.78rem;">
+                  <div class="code-header" style="padding: 6px 12px;"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div></div>
+                  <div class="code-body" style="padding: 0.9rem 1rem; line-height: 1.9; font-size: 0.78rem;" id="mm-code-panel">
+<span class="type">int</span> <span class="var">max</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="type">int</span> <span class="var">max2</span> <span class="op">=</span> <span class="num">0</span>;<br>
+<span class="kw">for</span> (...)<br>
+{<br>
+&nbsp;<span id="mm-hl-if" class="kw">if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max</span>)<br>
+&nbsp;{<br>
+&nbsp;&nbsp;<span id="mm-hl-max2eq"><span class="var">max2</span> <span class="op">=</span> <span class="var">max</span>;</span><br>
+&nbsp;&nbsp;<span id="mm-hl-maxeq"><span class="var">max</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];</span><br>
+&nbsp;}<br>
+&nbsp;<span id="mm-hl-elseif" class="kw">else if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max2</span>)<br>
+&nbsp;&nbsp;<span id="mm-hl-elsebody"><span class="var">max</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];</span><br>
+}
+                  </div>
+                </div>
+                <div style="margin-top: 0.75rem; background: var(--surface2); border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.8rem;">
+                  <div style="color: var(--muted); font-size: 0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.4rem;">Aktuelle Werte</div>
+                  <div style="display:flex; gap:1.5rem;">
+                    <div><div style="font-family:'JetBrains Mono'; font-size:1.2rem; font-weight:700; color:var(--accent)" id="mm-side-max">–</div><div style="font-size:0.7rem; color:var(--muted)">max</div></div>
+                    <div><div style="font-family:'JetBrains Mono'; font-size:1.2rem; font-weight:700; color:var(--accent2)" id="mm-side-max2">–</div><div style="font-size:0.7rem; color:var(--muted)">max2</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="stepper-panel" id="mm-2">
+            <h3>Den Fehler im Code finden und korrigieren</h3>
+            <p>Hast du beim Trace bemerkt, dass die Ergebnisse nicht stimmen? Das erwartete Ergebnis für <code>{12, 10, 40, 73, 33, 60}</code> wäre <strong>max = 73, max2 = 60</strong> — aber der Code liefert <strong>max = 60, max2 = 40</strong>.</p>
+            <div class="callout callout-error">
+              <span class="callout-icon">🐛</span>
+              <div class="callout-text">
+                <strong>Der Fehler:</strong> Im <code>else if</code>-Zweig steht <code>max = CPULoad[i]</code> — aber es sollte <code>max2 = CPULoad[i]</code> heißen!<br><br>
+                Wenn ein Wert nicht das neue Maximum ist, aber größer als das bisherige Zweithöchste, muss er das neue <strong>max2</strong> werden — nicht max! Durch den Fehler wird max überschrieben und das echte Maximum (73) geht verloren.
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0;">
+              <div>
+                <div style="font-size: 0.75rem; font-weight:700; color: var(--accent); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">❌ Fehlerhaft</div>
+                <div class="code-block" style="margin:0;">
+                  <div class="code-body" style="font-size:0.82rem;">
+<span class="kw">else if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max2</span>)<br>
+&nbsp;&nbsp;<span class="hl-r"><span class="var">max</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; font-weight:700; color: var(--accent3); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">✅ Korrekt</div>
+                <div class="code-block" style="margin:0;">
+                  <div class="code-body" style="font-size:0.82rem;">
+<span class="kw">else if</span> (<span class="var">CPULoad</span>[<span class="var">i</span>] <span class="op">&gt;</span> <span class="var">max2</span>)<br>
+&nbsp;&nbsp;<span class="hl"><span class="var">max2</span> <span class="op">=</span> <span class="var">CPULoad</span>[<span class="var">i</span>];</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p>Mit der richtigen Version: CPULoad = {12, 10, 40, 73, 33, 60} → <strong style="color: var(--accent3)">max = 73, max2 = 60</strong> ✅</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Quiz -->
+      <h2>Abschluss-Quiz</h2>
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Was ist der korrekte Wert von max2 nach i=2 (CPULoad[2]=40)?</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p><em>Hinweis: Nutze den fehlerhaften Code aus der Aufgabe (wie er in der Tabelle ist).</em></p>
+          <div class="options-grid" id="qfin-options">
+            <button class="option-btn" onclick="checkMC('qfin', this, false)">0</button>
+            <button class="option-btn" onclick="checkMC('qfin', this, false)">12</button>
+            <button class="option-btn" onclick="checkMC('qfin', this, true)">12</button>
+            <button class="option-btn" onclick="checkMC('qfin', this, false)">40</button>
+          </div>
+          <div id="qfin-feedback" class="feedback"></div>
+
+          <div class="callout callout-info" style="margin-top: 1rem;">
+            <span class="callout-icon">📊</span>
+            <div class="callout-text">
+              <strong>Vollständige korrekte Trace-Tabelle (fehlerhafter Code):</strong><br>
+              i=0: CPULoad=12 &gt; max=0 → max2=0, max=12<br>
+              i=1: CPULoad=10, weder &gt; max=12 noch &gt; max2=0... 10 &gt; 0 → <strong>else if greift → aber: max=10 (Fehler!)</strong><br>
+              i=2: CPULoad=40 &gt; max=10 → max2=10, max=40<br>
+              i=3: CPULoad=73 &gt; max=40 → max2=40, max=73<br>
+              i=4: CPULoad=33, nicht &gt;73, aber 33&gt;40? Nein! → nichts<br>
+              i=5: CPULoad=60, nicht &gt;73, aber 60&gt;40 → else if: <strong>max=60 (Fehler!)</strong><br>
+              <strong>Ergebnis (fehlerhaft): max=60, max2=40</strong> (statt max=73, max2=60)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('aufgabe1')">← Zurück: MemMon</button>
+        <button class="btn btn-primary" onclick="showPage('aufgabe3')">Weiter: Aufgabe Mittelwerte →</button>
+      </div>
+    </div>
+
+    <!-- === PAGE: AUFGABE 3 (Mittelwerte i+=3) === -->
+    <div class="page" id="page-aufgabe3">
+      <div class="badge-row">
+        <span class="tag tag-red">IHK-Aufgabe</span>
+        <span class="tag tag-purple">25 Punkte</span>
+        <span class="tag tag-blue">i += 3</span>
+      </div>
+      <h1>Prüfungsaufgabe:<br>Methode „Mittelwerte" 📋</h1>
+      <p class="subtitle">Dreier-Schritte im Schleifenkopf verstehen</p>
+
+      <div class="callout callout-warn">
+        <span class="callout-icon">📝</span>
+        <div class="callout-text"><strong>Aufgabenstellung:</strong> Die Methode <code>Mittelwerte</code> soll jeweils von drei aufeinanderfolgenden Werten im Array <code>PerfCPU</code> den Mittelwert berechnen und die ursprünglichen drei Werte ersetzen: die äußeren beiden werden auf <code>0</code> gesetzt, der mittlere erhält den Mittelwert.</div>
+      </div>
+
+      <h2>Das Array vor und nach der Methode</h2>
+      <div style="overflow-x: auto; margin: 1rem 0;">
+        <table style="min-width: 500px;">
+          <tr>
+            <th>Array-Index</th>
+            <td style="font-weight:700; color: var(--muted)">0</td><td style="font-weight:700; color: var(--muted)">1</td><td style="font-weight:700; color: var(--muted)">2</td>
+            <td style="font-weight:700; color: var(--muted)">3</td><td style="font-weight:700; color: var(--muted)">4</td><td style="font-weight:700; color: var(--muted)">5</td>
+            <td style="font-weight:700; color: var(--muted)">6</td><td style="font-weight:700; color: var(--muted)">7</td><td style="font-weight:700; color: var(--muted)">8</td>
+          </tr>
+          <tr>
+            <th>Wert vorher</th>
+            <td class="cell-val">40</td><td class="cell-val">42</td><td class="cell-val">47</td>
+            <td class="cell-val">52</td><td class="cell-val">50</td><td class="cell-val">60</td>
+            <td class="cell-val">76</td><td class="cell-val">77</td><td class="cell-val">81</td>
+          </tr>
+          <tr>
+            <th>Wert nachher</th>
+            <td style="color: var(--accent3); font-weight:700">0</td><td style="color: var(--accent); font-weight:700">43</td><td style="color: var(--accent3); font-weight:700">0</td>
+            <td style="color: var(--accent3); font-weight:700">0</td><td style="color: var(--accent); font-weight:700">54</td><td style="color: var(--accent3); font-weight:700">0</td>
+            <td style="color: var(--accent3); font-weight:700">0</td><td style="color: var(--accent); font-weight:700">78</td><td style="color: var(--accent3); font-weight:700">0</td>
+          </tr>
+        </table>
+      </div>
+      <div class="callout callout-tip">
+        <span class="callout-icon">🔍</span>
+        <div class="callout-text">
+          Gruppe 1 (Index 0–2): (40+42+47)/3 = 43 → Index 0 = <strong>0</strong>, Index 1 = <strong>43</strong>, Index 2 = <strong>0</strong><br>
+          Gruppe 2 (Index 3–5): (52+50+60)/3 = 54 → Index 3 = <strong>0</strong>, Index 4 = <strong>54</strong>, Index 5 = <strong>0</strong><br>
+          Gruppe 3 (Index 6–8): (76+77+81)/3 = 78 → Index 6 = <strong>0</strong>, Index 7 = <strong>78</strong>, Index 8 = <strong>0</strong>
+        </div>
+      </div>
+
+      <h2>Der Quellcode</h2>
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Mittelwerte.cs</span></div>
+        <div class="code-body">
+<span class="cmt">// Zeile1: Test-Array anlegen</span><br>
+<span class="type">int</span>[] <span class="var">PerfCPU</span> <span class="op">=</span> <span class="kw">new</span> <span class="type">int</span>[] {<span class="num">40</span>,<span class="num">42</span>,<span class="num">47</span>,<span class="num">52</span>,<span class="num">50</span>,<span class="num">60</span>,<span class="num">76</span>,<span class="num">77</span>,<span class="num">81</span>};<br>
+<span class="cmt">// Indizes:                   0   1   2   3   4   5   6   7   8</span><br>
+<span class="type">int</span> <span class="var">temp</span> <span class="op">=</span> <span class="num">0</span>;  <span class="cmt">// Hilfsvariable für Mittelwert</span><br><br>
+<span class="cmt">// Zeile6: Schleife zum Berechnen und Speichern der Mittelwerte</span><br>
+<span id="a3-forline"><span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">1</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">6</span>; <span class="var">i</span> <span class="op">+=</span> <span class="num">3</span>)</span><br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">temp</span> <span class="op">=</span> ((<span class="var">PerfCPU</span>[<span class="var">i</span> <span class="op">-</span> <span class="num">1</span>]) <span class="op">+</span> (<span class="var">PerfCPU</span>[<span class="var">i</span>]) <span class="op">+</span> (<span class="var">PerfCPU</span>[<span class="var">i</span> <span class="op">+</span> <span class="num">1</span>])) <span class="op">/</span> <span class="num">3</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">PerfCPU</span>[<span class="var">i</span>] <span class="op">=</span> <span class="num">0</span>; <span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">-</span><span class="num">1</span>] <span class="op">=</span> <span class="var">temp</span>; <span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">+</span><span class="num">1</span>] <span class="op">=</span> <span class="num">0</span>;<br>
+}
+        </div>
+      </div>
+
+      <div class="callout callout-error">
+        <span class="callout-icon">🐛</span>
+        <div class="callout-text"><strong>Achtung:</strong> Dieser Code enthält zwei Fehler! Wir analysieren ihn zunächst Schritt für Schritt, und dann findest du die Fehler selbst.</div>
+      </div>
+
+      <h2>🔑 Das Wichtigste: Den Schleifenkopf verstehen</h2>
+
+      <div class="stepper">
+        <div class="stepper-tabs">
+          <div class="stepper-tab active" onclick="switchTab('a3', 0)">① Was macht i += 3?</div>
+          <div class="stepper-tab" onclick="switchTab('a3', 1)">② Warum startet i bei 1?</div>
+          <div class="stepper-tab" onclick="switchTab('a3', 2)">③ Trace-Tabelle</div>
+          <div class="stepper-tab" onclick="switchTab('a3', 3)">④ Fehler finden</div>
+        </div>
+        <div class="stepper-content">
+
+          <!-- TAB 0: i += 3 -->
+          <div class="stepper-panel active" id="a3-0">
+            <h3 style="color: var(--accent4)">Was bedeutet <code>i += 3</code>?</h3>
+            <p><code>i += 3</code> ist eine Kurzform für <code>i = i + 3</code>. Statt i bei jedem Durchlauf um 1 zu erhöhen (<code>i++</code>), wird i um <strong>3</strong> erhöht.</p>
+            <div style="background: var(--surface2); border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0;">
+              <div style="font-size: 0.8rem; color: var(--muted); margin-bottom: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Vergleich: i++ vs i += 3</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <div style="font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem;">Mit i++ (Schritt 1):</div>
+                  <div style="font-family: 'JetBrains Mono'; font-size: 0.85rem; color: var(--accent2); line-height: 2;">i = 0 → 1 → 2 → 3 → 4 → 5 → 6...</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem;">Mit i += 3 (Schritt 3):</div>
+                  <div style="font-family: 'JetBrains Mono'; font-size: 0.85rem; color: var(--accent4); line-height: 2;">i = 1 → 4 → 7 → 10 → ...</div>
+                </div>
+              </div>
+            </div>
+            <div class="callout callout-info">
+              <span class="callout-icon">💡</span>
+              <div class="callout-text"><strong>Warum Schritt 3?</strong> Weil immer <strong>3 Werte zusammen</strong> verarbeitet werden (eine Gruppe). Nach jeder Gruppe springt i zum mittleren Index der nächsten Gruppe: 1 → 4 → 7.</div>
+            </div>
+            <div class="callout callout-tip">
+              <span class="callout-icon">🎯</span>
+              <div class="callout-text"><strong>Warum endet die Schleife bei i &lt; 9?</strong> Das Array hat 9 Elemente (Indizes 0–8). Die drei mittleren Indizes sind 1, 4, 7. Nach i=7 gilt: i += 3 → i=10. Da 10 &lt; 9 falsch ist, stoppt die Schleife. Mit dem fehlerhaften <code>i &lt; 6</code> wäre schon nach i=4 Schluss — Gruppe 3 (76,77,81) wird nie verarbeitet!</div>
+            </div>
+            <div style="background: var(--surface2); border-radius: 8px; padding: 1rem; margin: 1rem 0; font-family: 'JetBrains Mono'; font-size: 0.88rem;">
+              <div style="color: var(--muted); font-size: 0.75rem; margin-bottom: 0.5rem;">MERKE: Allgemeine Formel</div>
+              <span style="color: var(--accent4)">i += N</span>&nbsp;&nbsp;=&nbsp;&nbsp;<span style="color: var(--text)">i = i + N</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--muted)">(erhöht i um N pro Durchlauf)</span>
+            </div>
+          </div>
+
+          <!-- TAB 1: Warum i = 1 -->
+          <div class="stepper-panel" id="a3-1">
+            <h3 style="color: var(--accent)">Warum startet <code>i</code> bei <code>1</code> (nicht bei <code>0</code>)?</h3>
+            <p>Im Schleifenkörper greift der Code auf <code>PerfCPU[i-1]</code>, <code>PerfCPU[i]</code> und <code>PerfCPU[i+1]</code> zu — also auf den Vorgänger, den aktuellen und den Nachfolger von <code>i</code>.</p>
+            <div style="overflow-x: auto;">
+              <table style="min-width: 450px; margin: 1rem 0;">
+                <tr>
+                  <th>i</th><th>i-1 (linker Nachbar)</th><th>i (Mitte)</th><th>i+1 (rechter Nachbar)</th>
+                </tr>
+                <tr>
+                  <td style="color: var(--accent4); font-weight:700">1</td>
+                  <td><code>PerfCPU[0]</code> = 40</td>
+                  <td><code>PerfCPU[1]</code> = 42</td>
+                  <td><code>PerfCPU[2]</code> = 47</td>
+                </tr>
+                <tr>
+                  <td style="color: var(--accent4); font-weight:700">4</td>
+                  <td><code>PerfCPU[3]</code> = 52</td>
+                  <td><code>PerfCPU[4]</code> = 50</td>
+                  <td><code>PerfCPU[5]</code> = 60</td>
+                </tr>
+                <tr>
+                  <td style="color: var(--accent4); font-weight:700">7</td>
+                  <td><code>PerfCPU[6]</code> = 76</td>
+                  <td><code>PerfCPU[7]</code> = 77</td>
+                  <td><code>PerfCPU[8]</code> = 81</td>
+                </tr>
+              </table>
+            </div>
+            <div class="callout callout-warn">
+              <span class="callout-icon">⚠️</span>
+              <div class="callout-text"><strong>Hätte i bei 0 gestartet:</strong> dann würde <code>PerfCPU[i-1]</code> = <code>PerfCPU[-1]</code> zugegriffen — Index <strong>-1 existiert nicht</strong>! Das würde einen Laufzeitfehler verursachen. Deshalb startet i bei <strong>1</strong> (dem mittleren Index der ersten Gruppe).</div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Trace -->
+          <div class="stepper-panel" id="a3-2">
+            <h3>Trace-Tabelle – animiert (fehlerhafter Code)</h3>
+            <p>Klicke durch die Schritte. Beachte: Wir verfolgen den <em>fehlerhaften</em> Code mit <code>i &lt; 6</code> und der falschen Speicher-Reihenfolge.</p>
+            <div class="trace-split">
+              <div class="trace-split-main">
+                <div class="trace-controls">
+                  <button class="btn btn-secondary" onclick="a3Prev()">← Zurück</button>
+                  <button class="btn btn-primary" onclick="a3Next()">Nächster Schritt →</button>
+                  <button class="btn btn-secondary" onclick="a3Reset()">↺ Neu</button>
+                  <span class="step-counter" id="a3StepCounter">i = –</span>
+                </div>
+                <div style="overflow-x:auto; margin-top: 0.75rem;">
+                  <table id="a3Table">
+                    <tr>
+                      <th>i</th><th>i&lt;6?</th><th>i-1</th><th>i</th><th>i+1</th><th>temp</th><th>Array-Änderungen</th>
+                    </tr>
+                    <tr id="a3r-start"><td>Start</td><td>–</td><td>–</td><td>–</td><td>–</td><td>0</td><td style="color: var(--muted); font-size:0.8rem">Keine</td></tr>
+                    <tr id="a3r-0"><td style="color:var(--accent4);font-weight:700">1</td><td id="a3-cond-0">?</td><td id="a3-im1-0">?</td><td id="a3-i-0">?</td><td id="a3-ip1-0">?</td><td id="a3-temp-0">?</td><td id="a3-chg-0" style="color: var(--muted)">–</td></tr>
+                    <tr id="a3r-1"><td style="color:var(--accent4);font-weight:700">4</td><td id="a3-cond-1">?</td><td id="a3-im1-1">?</td><td id="a3-i-1">?</td><td id="a3-ip1-1">?</td><td id="a3-temp-1">?</td><td id="a3-chg-1" style="color: var(--muted)">–</td></tr>
+                    <tr id="a3r-2"><td style="color:var(--accent4);font-weight:700">7</td><td id="a3-cond-2">?</td><td>–</td><td>–</td><td>–</td><td>–</td><td id="a3-chg-2" style="color: var(--muted)">–</td></tr>
+                  </table>
+                </div>
+                <div id="a3-explanation" style="background: rgba(210,168,255,0.07); border: 1px solid rgba(210,168,255,0.2); border-radius: 8px; padding: 1rem; margin-top: 0.75rem; font-size: 0.88rem; min-height: 60px;">
+                  Drücke „Nächster Schritt".
+                </div>
+                <div id="a3-array-display" style="margin-top:1rem; display:none;">
+                  <div style="font-size:0.75rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Array PerfCPU aktuell:</div>
+                  <div style="display:flex; gap:4px; flex-wrap:wrap;" id="a3-array-boxes"></div>
+                </div>
+              </div>
+              <!-- Code panel alongside trace -->
+              <div class="trace-split-code">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Code – zur Referenz</div>
+                <div class="code-block" style="margin:0;">
+                  <div class="code-header" style="padding: 6px 12px;"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div></div>
+                  <div class="code-body" style="padding: 0.9rem 1rem; line-height: 2; font-size: 0.78rem;">
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span><span class="op">=</span><span class="num">1</span>; <span class="var">i</span><span class="op">&lt;</span><span class="num">6</span>; <span class="var">i</span><span class="op">+=</span><span class="num">3</span>)<br>
+{<br>
+&nbsp;<span class="var">temp</span> <span class="op">=</span><br>
+&nbsp;&nbsp;(<span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">-</span><span class="num">1</span>]<br>
+&nbsp;&nbsp;+ <span class="var">PerfCPU</span>[<span class="var">i</span>]<br>
+&nbsp;&nbsp;+ <span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">+</span><span class="num">1</span>])<br>
+&nbsp;&nbsp;/ <span class="num">3</span>;<br>
+&nbsp;<span class="var">PerfCPU</span>[<span class="var">i</span>] <span class="op">=</span> <span class="num">0</span>;<br>
+&nbsp;<span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">-</span><span class="num">1</span>] <span class="op">=</span> <span class="var">temp</span>;<br>
+&nbsp;<span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">+</span><span class="num">1</span>] <span class="op">=</span> <span class="num">0</span>;<br>
+}
+                  </div>
+                </div>
+                <div style="margin-top: 0.75rem; background: var(--surface2); border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.8rem;">
+                  <div style="color: var(--muted); font-size: 0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Aktueller Schritt</div>
+                  <div id="a3-side-status" style="font-family:'JetBrains Mono'; font-size:0.82rem; color: var(--muted);">–</div>
+                </div>
+                <!-- highlight overlays positioned over specific lines -->
+                <div id="a3-codebox-overlay" style="display:none; margin-top:0.5rem; border-radius:6px; padding:0.5rem 0.8rem; font-size:0.78rem; font-family:'JetBrains Mono';">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: Fehler finden -->
+          <div class="stepper-panel" id="a3-3">
+            <h3>Die zwei Fehler im Code</h3>
+            <div class="callout callout-error">
+              <span class="callout-icon">🐛</span>
+              <div class="callout-text">
+                <strong>Fehler 1 – Zeile 6: Falsche Bedingung</strong><br>
+                <code style="color: var(--accent)">i &lt; 6</code> → richtig: <code style="color: var(--accent3)">i &lt; 9</code> (oder <code>i &lt; PerfCPU.Length</code>)<br>
+                <span style="font-size: 0.85rem;">Mit i &lt; 6 wird die dritte Gruppe (i=7) nie verarbeitet!</span>
+              </div>
+            </div>
+            <div class="callout callout-error">
+              <span class="callout-icon">🐛</span>
+              <div class="callout-text">
+                <strong>Fehler 2 – Zeile 9: Falsches Speichern</strong><br>
+                <code style="color: var(--accent)">PerfCPU[i] = 0; PerfCPU[i-1] = temp; PerfCPU[i+1] = 0;</code><br>
+                → richtig: <code style="color: var(--accent3)">PerfCPU[i-1] = 0; PerfCPU[i] = temp; PerfCPU[i+1] = 0;</code><br>
+                <span style="font-size: 0.85rem;">Der Mittelwert (temp) muss an die <strong>mittlere</strong> Position (i), die äußeren werden auf 0 gesetzt. Im fehlerhaften Code wird der Mittelwert an i-1 (die linke Position) geschrieben und i selbst (die Mitte) auf 0 gesetzt!</span>
+              </div>
+            </div>
+            <div class="code-block">
+              <div class="code-header"><div class="code-dots"><div class="code-dot dot-r"></div><div class="code-dot dot-y"></div><div class="code-dot dot-g"></div></div><span>Korrigierter Code ✅</span></div>
+              <div class="code-body">
+<span class="kw">for</span> (<span class="type">int</span> <span class="var">i</span> <span class="op">=</span> <span class="num">1</span>; <span class="hl"><span class="var">i</span> <span class="op">&lt;</span> <span class="num">9</span></span>; <span class="var">i</span> <span class="op">+=</span> <span class="num">3</span>) <span class="cmt"> ← i &lt; 9 statt i &lt; 6</span><br>
+{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="var">temp</span> <span class="op">=</span> ((<span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">-</span><span class="num">1</span>]) <span class="op">+</span> (<span class="var">PerfCPU</span>[<span class="var">i</span>]) <span class="op">+</span> (<span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">+</span><span class="num">1</span>])) <span class="op">/</span> <span class="num">3</span>;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl"><span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">-</span><span class="num">1</span>] <span class="op">=</span> <span class="num">0</span>; <span class="var">PerfCPU</span>[<span class="var">i</span>] <span class="op">=</span> <span class="var">temp</span>; <span class="var">PerfCPU</span>[<span class="var">i</span><span class="op">+</span><span class="num">1</span>] <span class="op">=</span> <span class="num">0</span>;</span> <span class="cmt"> ← Reihenfolge korrigiert</span><br>
+}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Self-test -->
+      <h2>Selbsttest</h2>
+
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 1: Welche Werte nimmt i an?</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Mit <code>for (int i = 1; i &lt; 9; i += 3)</code> — welche Werte nimmt <code>i</code> an?</p>
+          <div class="options-grid" id="qa3q1-options">
+            <button class="option-btn" onclick="checkMC('qa3q1', this, false)">0, 3, 6</button>
+            <button class="option-btn" onclick="checkMC('qa3q1', this, true)">1, 4, 7</button>
+            <button class="option-btn" onclick="checkMC('qa3q1', this, false)">1, 2, 3, 4, 5, 6, 7, 8</button>
+            <button class="option-btn" onclick="checkMC('qa3q1', this, false)">0, 1, 2, 3</button>
+          </div>
+          <div id="qa3q1-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Start: i=1. Nach 1. Durchlauf: i = 1+3 = 4. Nach 2. Durchlauf: i = 4+3 = 7. Nach 3. Durchlauf: i = 7+3 = 10 → 10 &lt; 9 ist false → Schleife endet.
+          </div>
+        </div>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 2: Was berechnet temp bei i=4?</span>
+          <span class="exercise-points">3 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Array: <code>{40,42,47,52,50,60,76,77,81}</code>. Bei <code>i=4</code>: Was ist der Wert von <code>temp</code>?</p>
+          <div class="options-grid" id="qa3q2-options">
+            <button class="option-btn" onclick="checkMC('qa3q2', this, false)">50</button>
+            <button class="option-btn" onclick="checkMC('qa3q2', this, false)">53</button>
+            <button class="option-btn" onclick="checkMC('qa3q2', this, true)">54</button>
+            <button class="option-btn" onclick="checkMC('qa3q2', this, false)">55</button>
+          </div>
+          <div id="qa3q2-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> Bei i=4: PerfCPU[3]+PerfCPU[4]+PerfCPU[5] = 52+50+60 = 162. 162/3 = <strong>54</strong>.
+          </div>
+        </div>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-header">
+          <span class="exercise-title">Frage 3: Wo liegt Fehler 2 genau?</span>
+          <span class="exercise-points">4 Punkte</span>
+        </div>
+        <div class="exercise-body">
+          <p>Im Originalcode steht: <code>PerfCPU[i] = 0; PerfCPU[i-1] = temp; PerfCPU[i+1] = 0;</code><br>Was ist falsch?</p>
+          <div class="options-grid" id="qa3q3-options">
+            <button class="option-btn" onclick="checkMC('qa3q3', this, false)">temp sollte durch 2 geteilt werden</button>
+            <button class="option-btn" onclick="checkMC('qa3q3', this, true)">Der Mittelwert wird an i-1 statt an i (die Mitte) gespeichert</button>
+            <button class="option-btn" onclick="checkMC('qa3q3', this, false)">PerfCPU[i+1] soll nicht 0 werden</button>
+            <button class="option-btn" onclick="checkMC('qa3q3', this, false)">Es fehlt ein Semikolon</button>
+          </div>
+          <div id="qa3q3-feedback" class="feedback">
+            <strong>✅ Richtig!</strong> temp (der Mittelwert) gehört an die <strong>mittlere</strong> Position i. Die äußeren Positionen i-1 und i+1 werden auf 0 gesetzt. Im Fehlercode ist i und i-1 vertauscht: der Mittelwert landet an i-1 (links), während i selbst (die Mitte) auf 0 gesetzt wird.
+          </div>
+        </div>
+      </div>
+
+      <div style="background: linear-gradient(135deg, rgba(86,211,100,0.1), rgba(121,192,255,0.1)); border: 1px solid rgba(86,211,100,0.3); border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem 0;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🏆</div>
+        <h2 style="color: var(--accent3); margin: 0 0 0.5rem">Alle 3 Prüfungsaufgaben abgeschlossen!</h2>
+        <p style="margin-bottom: 1.5rem;">Du hast MemMon, MaxMax2 und Mittelwerte durchgearbeitet. Du bist bereit für die IHK-Prüfung!</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="showPage('intro')">↺ Von vorne beginnen</button>
+          <button class="btn btn-secondary" onclick="showPage('aufgabe1')">Zu den Prüfungsaufgaben</button>
+        </div>
+      </div>
+
+      <div class="page-nav">
+        <button class="btn btn-secondary" onclick="showPage('aufgabe2')">← Zurück: MaxMax2</button>
+        <div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// === STATE ===
+let score = 0;
+let answeredQuestions = new Set();
+let completedPages = new Set();
+
+const pages = ['intro', 'anatomie', 'ablauf', 'trace', 'uebung1', 'uebung2', 'aufgabe1', 'aufgabe2', 'aufgabe3'];
+
+// === NAVIGATION ===
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  completedPages.add(id);
+  updateProgress();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function updateProgress() {
+  const pct = Math.round((completedPages.size / pages.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('scoreDisplay').textContent = score + ' Pkt.';
+}
+
+// === TABS ===
+function switchTab(group, idx) {
+  const tabs = document.querySelectorAll(`.stepper-tabs .stepper-tab`);
+  // find tabs within same stepper
+  const steppers = document.querySelectorAll('.stepper');
+  steppers.forEach(stepper => {
+    const myTabs = stepper.querySelectorAll('.stepper-tab');
+    const firstPanel = stepper.querySelector('.stepper-panel');
+    if (!firstPanel) return;
+    const prefix = firstPanel.id.split('-')[0];
+    if (prefix === group) {
+      myTabs.forEach((t, i) => t.classList.toggle('active', i === idx));
+      stepper.querySelectorAll('.stepper-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+    }
+  });
+}
+
+// === MULTIPLE CHOICE ===
+function checkMC(qid, btn, isCorrect) {
+  const container = document.getElementById(qid + '-options');
+  if (container.querySelector('.correct, .wrong')) return; // already answered
+  const feedback = document.getElementById(qid + '-feedback');
+  if (isCorrect) {
+    btn.classList.add('correct');
+    if (feedback) { feedback.classList.add('show', 'correct'); }
+    if (!answeredQuestions.has(qid)) {
+      score += 2;
+      answeredQuestions.add(qid);
+      updateProgress();
+    }
+  } else {
+    btn.classList.add('wrong');
+    if (feedback) {
+      feedback.classList.add('show', 'wrong');
+      feedback.innerHTML = '<strong>❌ Nicht ganz.</strong> Schau dir die richtige Antwort an (grün markiert) und lies die Erklärung unten.';
+    }
+    // highlight correct
+    const allBtns = container.querySelectorAll('.option-btn');
+    allBtns.forEach(b => { if (b.onclick.toString().includes('true')) b.classList.add('correct'); });
+  }
+  container.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+}
+
+// === TRACE TABLE ===
+const traceAnswers = { t0: '0', t1: '5', t2: '15', t3: '30', tc1: 'true', tc2: 'true', tc3: 'true', tc4: 'false' };
+function checkTrace() {
+  let correct = 0, total = 0;
+  Object.entries(traceAnswers).forEach(([id, ans]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    total++;
+    const val = el.value.trim().toLowerCase();
+    if (val === ans.toLowerCase()) { el.classList.add('correct'); el.classList.remove('wrong'); correct++; }
+    else { el.classList.add('wrong'); el.classList.remove('correct'); }
+  });
+  const fb = document.getElementById('trace-feedback');
+  if (correct === total) {
+    fb.innerHTML = '✅ <strong>Perfekt! Alle ' + total + ' Antworten richtig!</strong> Du verstehst Trace-Tabellen!';
+    fb.className = 'feedback show correct';
+    if (!answeredQuestions.has('trace')) { score += 5; answeredQuestions.add('trace'); updateProgress(); }
+  } else {
+    fb.innerHTML = '❌ <strong>' + correct + ' von ' + total + ' richtig.</strong> Tipp: summe startet bei 0, nach i=0 gilt summe=5, nach i=1 ist summe=15 (5+10), etc.';
+    fb.className = 'feedback show wrong';
+  }
+}
+function resetTrace() {
+  ['t0','t1','t2','t3','tc1','tc2','tc3','tc4'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.className = 'fill-input'; }
+  });
+  document.getElementById('trace-feedback').className = 'feedback';
+}
+
+// === FILL BLANK ===
+function checkFillBlank() {
+  const fb1 = document.getElementById('fb1');
+  const fb2 = document.getElementById('fb2');
+  const fb3 = document.getElementById('fb3');
+  let ok = 0;
+  if (fb1.value.trim() === '0') { fb1.classList.add('correct'); fb1.classList.remove('wrong'); ok++; } else { fb1.classList.add('wrong'); fb1.classList.remove('correct'); }
+  if (fb2.value.trim() === '10') { fb2.classList.add('correct'); fb2.classList.remove('wrong'); ok++; } else { fb2.classList.add('wrong'); fb2.classList.remove('correct'); }
+  if (['++', '+= 1', '+=1'].includes(fb3.value.trim())) { fb3.classList.add('correct'); fb3.classList.remove('wrong'); ok++; } else { fb3.classList.add('wrong'); fb3.classList.remove('correct'); }
+  const fb = document.getElementById('fb-feedback');
+  if (ok === 3) {
+    fb.innerHTML = '✅ <strong>Perfekt!</strong> <code>for (int i = 0; i &lt; 10; i++)</code> — genau richtig!';
+    fb.className = 'feedback show correct';
+    if (!answeredQuestions.has('fb')) { score += 3; answeredQuestions.add('fb'); updateProgress(); }
+  } else {
+    fb.innerHTML = `❌ <strong>${ok}/3 richtig.</strong> Lösung: i=<strong>0</strong>; i&lt;<strong>10</strong>; i<strong>++</strong>`;
+    fb.className = 'feedback show wrong';
+  }
+}
+
+// === STEP ANIMATOR ===
+const animSteps = [
+  { i: '–', summe: '–', cond: '–', explain: '🟡 Initialisierung: <strong>int summe = 0</strong> und das Array wird erstellt.', hl: 'anim-init' },
+  { i: '–', summe: '0', cond: '–', explain: '🟡 <strong>summe = 0</strong> gesetzt.', hl: 'anim-sumvar' },
+  { i: '0', summe: '0', cond: '–', explain: '🟠 Initialisierung der Schleife: <strong>int i = 0</strong>.', hl: 'anim-i-init' },
+  { i: '0', summe: '0', cond: 'true', explain: '🟢 Bedingung prüfen: <strong>i (0) &lt; 5 → true</strong>. Schleifenkörper wird ausgeführt.', hl: 'anim-cond' },
+  { i: '0', summe: '10', cond: 'true', explain: '🔵 Schleifenkörper: <strong>summe = 0 + werte[0] = 0 + 10 = 10</strong>.', hl: 'anim-body' },
+  { i: '1', summe: '10', cond: 'true', explain: '🟣 Inkrement: <strong>i++ → i = 1</strong>.', hl: 'anim-incr' },
+  { i: '1', summe: '10', cond: 'true', explain: '🟢 Bedingung: <strong>i (1) &lt; 5 → true</strong>. Weiter.', hl: 'anim-cond' },
+  { i: '1', summe: '30', cond: 'true', explain: '🔵 Schleifenkörper: <strong>summe = 10 + werte[1] = 10 + 20 = 30</strong>.', hl: 'anim-body' },
+  { i: '2', summe: '30', cond: 'true', explain: '🟣 Inkrement: <strong>i++ → i = 2</strong>.', hl: 'anim-incr' },
+  { i: '2', summe: '30', cond: 'true', explain: '🟢 Bedingung: <strong>i (2) &lt; 5 → true</strong>. Weiter.', hl: 'anim-cond' },
+  { i: '2', summe: '60', cond: 'true', explain: '🔵 Schleifenkörper: <strong>summe = 30 + werte[2] = 30 + 30 = 60</strong>.', hl: 'anim-body' },
+  { i: '3', summe: '60', cond: 'true', explain: '🟣 Inkrement: <strong>i++ → i = 3</strong>.', hl: 'anim-incr' },
+  { i: '3', summe: '60', cond: 'true', explain: '🟢 Bedingung: <strong>i (3) &lt; 5 → true</strong>. Weiter.', hl: 'anim-cond' },
+  { i: '3', summe: '100', cond: 'true', explain: '🔵 Schleifenkörper: <strong>summe = 60 + werte[3] = 60 + 40 = 100</strong>.', hl: 'anim-body' },
+  { i: '4', summe: '100', cond: 'true', explain: '🟣 Inkrement: <strong>i++ → i = 4</strong>.', hl: 'anim-incr' },
+  { i: '4', summe: '100', cond: 'true', explain: '🟢 Bedingung: <strong>i (4) &lt; 5 → true</strong>. Weiter.', hl: 'anim-cond' },
+  { i: '4', summe: '150', cond: 'true', explain: '🔵 Schleifenkörper: <strong>summe = 100 + werte[4] = 100 + 50 = 150</strong>.', hl: 'anim-body' },
+  { i: '5', summe: '150', cond: 'true', explain: '🟣 Inkrement: <strong>i++ → i = 5</strong>.', hl: 'anim-incr' },
+  { i: '5', summe: '150', cond: 'false', explain: '🔴 Bedingung: <strong>i (5) &lt; 5 → FALSE</strong>! Die Schleife endet hier.', hl: 'anim-cond' },
+  { i: '5', summe: '150', cond: 'false', explain: '✅ <strong>Fertig!</strong> Console.WriteLine(summe) gibt <strong>150</strong> aus. Die Schleife hat alle 5 Werte addiert!', hl: 'anim-output' },
+];
+
+let animIdx = 0;
+const allAnimIds = ['anim-init','anim-sumvar','anim-i-init','anim-for','anim-cond','anim-incr','anim-body','anim-output'];
+
+function applyAnimStep(s) {
+  document.getElementById('var-i').textContent = s.i;
+  document.getElementById('var-summe').textContent = s.summe;
+  const condEl = document.getElementById('var-cond');
+  condEl.textContent = s.cond;
+  condEl.style.color = s.cond === 'true' ? 'var(--accent3)' : s.cond === 'false' ? 'var(--accent)' : 'var(--muted)';
+  document.getElementById('anim-explanation').innerHTML = s.explain;
+  allAnimIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = ''; el.style.borderRadius = ''; el.style.padding = ''; }
+  });
+  if (s.hl) {
+    const el = document.getElementById(s.hl);
+    if (el) { el.style.background = 'rgba(121,192,255,0.15)'; el.style.borderRadius = '4px'; el.style.padding = '2px 4px'; }
+  }
+  document.getElementById('stepCounter').textContent = `Schritt ${animIdx} / ${animSteps.length - 1}`;
+}
+
+function animNext() {
+  if (animIdx < animSteps.length - 1) animIdx++;
+  applyAnimStep(animSteps[animIdx]);
+}
+function animPrev() {
+  if (animIdx > 0) animIdx--;
+  applyAnimStep(animSteps[animIdx]);
+}
+function animReset() {
+  animIdx = 0;
+  allAnimIds.forEach(id => { const el = document.getElementById(id); if (el) { el.style.background = ''; el.style.borderRadius = ''; el.style.padding = ''; } });
+  document.getElementById('var-i').textContent = '–';
+  document.getElementById('var-summe').textContent = '–';
+  document.getElementById('var-cond').textContent = '–';
+  document.getElementById('anim-explanation').innerHTML = 'Drücke <strong>„Nächster Schritt"</strong>, um mit der Animation zu beginnen.';
+  document.getElementById('stepCounter').textContent = 'Schritt 0 / 19';
+}
+
+// === MAXMAX2 TRACE ANIMATOR ===
+const cpuLoad = [12, 10, 40, 73, 33, 60];
+// Simulate BUGGY code
+const mmTrace = (() => {
+  let max = 0, max2 = 0;
+  const rows = [];
+  for (let i = 0; i < cpuLoad.length; i++) {
+    const val = cpuLoad[i];
+    let why = '';
+    if (val > max) {
+      max2 = max; max = val;
+      why = `${val} > max → max2 = altes max, max = ${val}`;
+    } else if (val > max2) {
+      max = val; // BUGGY: should be max2
+      why = `${val} > max2 → FEHLER: max = ${val} (sollte max2 sein!)`;
+    } else {
+      why = `${val} ist weder > max noch > max2 → keine Änderung`;
+    }
+    rows.push({ i, val, max, max2, why });
+  }
+  return rows;
+})();
+
+let mmIdx = -1;
+function mmNext() {
+  if (mmIdx < mmTrace.length - 1) { mmIdx++; renderMMStep(); }
+}
+function mmPrev() {
+  if (mmIdx > -1) { mmIdx--; renderMMStep(); }
+}
+function mmReset() {
+  mmIdx = -1;
+  for (let i = 0; i < 6; i++) {
+    document.getElementById('mm-max-' + i).textContent = '?';
+    document.getElementById('mm-max2-' + i).textContent = '?';
+    document.getElementById('mm-why-' + i).textContent = '–';
+    document.getElementById('mmr-' + i).classList.remove('active-row');
+  }
+  document.getElementById('mmStepCounter').textContent = 'i = –';
+  document.getElementById('mm-explanation').textContent = 'Drücke „Nächster Schritt".';
+  const sideMax = document.getElementById('mm-side-max');
+  const sideMax2 = document.getElementById('mm-side-max2');
+  if (sideMax) sideMax.textContent = '0';
+  if (sideMax2) sideMax2.textContent = '0';
+  ['mm-hl-if','mm-hl-max2eq','mm-hl-maxeq','mm-hl-elseif','mm-hl-elsebody'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = ''; el.style.borderRadius = ''; el.style.padding = ''; el.style.display = ''; }
+  });
+}
+function renderMMStep() {
+  for (let j = 0; j < 6; j++) document.getElementById('mmr-' + j).classList.remove('active-row');
+  // Reset code highlights
+  ['mm-hl-if','mm-hl-max2eq','mm-hl-maxeq','mm-hl-elseif','mm-hl-elsebody'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = ''; el.style.borderRadius = ''; el.style.padding = ''; el.style.display = ''; }
+  });
+  // Update side panel values
+  const sideMax = document.getElementById('mm-side-max');
+  const sideMax2 = document.getElementById('mm-side-max2');
+  if (mmIdx < 0) {
+    if (sideMax) sideMax.textContent = '0';
+    if (sideMax2) sideMax2.textContent = '0';
+  }
+
+  const expEl = document.getElementById('mm-explanation');
+  if (mmIdx < 0) {
+    expEl.textContent = 'Drücke „Nächster Schritt".';
+    expEl.style.borderColor = 'rgba(247,129,102,0.2)';
+    expEl.style.background = 'rgba(247,129,102,0.07)';
+    document.getElementById('mmStepCounter').textContent = 'i = –';
+    return;
+  }
+  const s = mmTrace[mmIdx];
+  document.getElementById('mm-max-' + s.i).textContent = s.max;
+  document.getElementById('mm-max2-' + s.i).textContent = s.max2;
+  const whyEl = document.getElementById('mm-why-' + s.i);
+  whyEl.textContent = s.why;
+  whyEl.style.color = s.why.includes('FEHLER') ? 'var(--accent)' : 'var(--accent3)';
+  whyEl.style.fontSize = '0.8rem';
+  document.getElementById('mmr-' + s.i).classList.add('active-row');
+  document.getElementById('mmStepCounter').textContent = `i = ${s.i}`;
+  expEl.innerHTML = `<strong>i = ${s.i}, CPULoad[${s.i}] = ${s.val}</strong><br>${s.why}`;
+  expEl.style.borderColor = s.why.includes('FEHLER') ? 'rgba(247,129,102,0.4)' : 'rgba(86,211,100,0.2)';
+  expEl.style.background = s.why.includes('FEHLER') ? 'rgba(247,129,102,0.07)' : 'rgba(86,211,100,0.07)';
+
+  // Update side panel variable display
+  if (sideMax) sideMax.textContent = s.max;
+  if (sideMax2) sideMax2.textContent = s.max2;
+
+  // Highlight active code line in side panel
+  const hlStyle = (id, color) => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = color; el.style.borderRadius = '3px'; el.style.padding = '1px 4px'; el.style.display = 'inline-block'; el.style.width = '100%'; }
+  };
+  if (s.why.includes('> max →') || s.why.includes('max2 = altes')) {
+    hlStyle('mm-hl-if', 'rgba(86,211,100,0.15)');
+    hlStyle('mm-hl-max2eq', 'rgba(121,192,255,0.15)');
+    hlStyle('mm-hl-maxeq', 'rgba(121,192,255,0.15)');
+  } else if (s.why.includes('FEHLER')) {
+    hlStyle('mm-hl-elseif', 'rgba(247,129,102,0.15)');
+    hlStyle('mm-hl-elsebody', 'rgba(247,129,102,0.25)');
+  } else {
+    hlStyle('mm-hl-if', 'rgba(121,192,255,0.1)');
+    hlStyle('mm-hl-elseif', 'rgba(121,192,255,0.1)');
+  }
+}
+
+// === AUFGABE 3 TRACE ANIMATOR (i += 3, BUGGY code i < 6) ===
+const a3Array = [40, 42, 47, 52, 50, 60, 76, 77, 81];
+// Simulate BUGGY code: i = 1; i < 6; i += 3
+// Only i=1 and i=4 execute; i=7 is skipped (7 < 6 is false)
+const a3Steps = [
+  {
+    rowIdx: 0, i: 1, cond: '1 < 6 → true',
+    im1: 'PerfCPU[0]=40', iv: 'PerfCPU[1]=42', ip1: 'PerfCPU[2]=47',
+    temp: '(40+42+47)/3 = 43',
+    chg: 'PerfCPU[1]=0, PerfCPU[0]=43, PerfCPU[2]=0',
+    explain: '<strong>i = 1:</strong> Bedingung 1 &lt; 6 ist <span style="color:var(--accent3)">true</span>. Gruppe 1 verarbeiten: PerfCPU[0]+PerfCPU[1]+PerfCPU[2] = 40+42+47 = 129 / 3 = <strong>43</strong>.<br>⚠️ Fehler 2 zeigt Wirkung: PerfCPU[1]=0, PerfCPU[0]=43, PerfCPU[2]=0 (Mittelwert landet an Index 0, nicht 1!)',
+    arrAfter: [43, 0, 0, 52, 50, 60, 76, 77, 81]
+  },
+  {
+    rowIdx: 1, i: 4, cond: '4 < 6 → true',
+    im1: 'PerfCPU[3]=52', iv: 'PerfCPU[4]=50', ip1: 'PerfCPU[5]=60',
+    temp: '(52+50+60)/3 = 54',
+    chg: 'PerfCPU[4]=0, PerfCPU[3]=54, PerfCPU[5]=0',
+    explain: '<strong>i = 4:</strong> Bedingung 4 &lt; 6 ist <span style="color:var(--accent3)">true</span>. Gruppe 2: PerfCPU[3]+PerfCPU[4]+PerfCPU[5] = 52+50+60 = 162 / 3 = <strong>54</strong>.<br>⚠️ Fehler 2: PerfCPU[4]=0, PerfCPU[3]=54, PerfCPU[5]=0 (Mittelwert an Index 3 statt 4!)',
+    arrAfter: [43, 0, 0, 54, 0, 0, 76, 77, 81]
+  },
+  {
+    rowIdx: 2, i: 7, cond: '7 < 6 → false',
+    im1: '–', iv: '–', ip1: '–', temp: '–',
+    chg: '⛔ Schleife endet! Gruppe 3 (76,77,81) wird NICHT verarbeitet!',
+    explain: '<strong>i = 7:</strong> Bedingung 7 &lt; 6 ist <span style="color:var(--accent)">false</span>. 🐛 <strong>Fehler 1!</strong> Die Schleife bricht ab — Gruppe 3 (Indizes 6,7,8) wird nie verarbeitet. Das Array bleibt teilweise unverändert.',
+    arrAfter: [43, 0, 0, 54, 0, 0, 76, 77, 81]
+  }
+];
+
+let a3Idx = -1;
+let a3CurrentArr = [...a3Array];
+
+function a3Next() {
+  if (a3Idx < a3Steps.length - 1) { a3Idx++; renderA3Step(); }
+}
+function a3Prev() {
+  if (a3Idx > -1) { a3Idx--; renderA3Step(); }
+}
+function a3Reset() {
+  a3Idx = -1;
+  a3CurrentArr = [...a3Array];
+  for (let j = 0; j < 3; j++) {
+    const r = document.getElementById('a3r-' + j);
+    if (r) r.classList.remove('active-row');
+    ['cond','im1','i','ip1','temp','chg'].forEach(f => {
+      const el = document.getElementById('a3-' + f + '-' + j);
+      if (el) { el.textContent = '?'; el.style.color = ''; }
+    });
+  }
+  document.getElementById('a3StepCounter').textContent = 'i = –';
+  document.getElementById('a3-explanation').textContent = 'Drücke „Nächster Schritt".';
+  document.getElementById('a3-array-display').style.display = 'none';
+  const overlay = document.getElementById('a3-codebox-overlay');
+  if (overlay) overlay.style.display = 'none';
+  const sideStatus = document.getElementById('a3-side-status');
+  if (sideStatus) { sideStatus.textContent = '–'; sideStatus.style.color = 'var(--muted)'; }
+}
+
+function renderA3Step() {
+  for (let j = 0; j < 3; j++) {
+    const r = document.getElementById('a3r-' + j);
+    if (r) r.classList.remove('active-row');
+  }
+  const sideStatus = document.getElementById('a3-side-status');
+  const overlay = document.getElementById('a3-codebox-overlay');
+  const expEl = document.getElementById('a3-explanation');
+
+  if (a3Idx < 0) {
+    expEl.textContent = 'Drücke „Nächster Schritt".';
+    if (sideStatus) { sideStatus.textContent = '–'; sideStatus.style.color = 'var(--muted)'; }
+    if (overlay) overlay.style.display = 'none';
+    document.getElementById('a3-array-display').style.display = 'none';
+    return;
+  }
+  const s = a3Steps[a3Idx];
+  const rowEl = document.getElementById('a3r-' + s.rowIdx);
+  if (rowEl) rowEl.classList.add('active-row');
+  document.getElementById('a3StepCounter').textContent = 'i = ' + s.i;
+
+  const condEl = document.getElementById('a3-cond-' + s.rowIdx);
+  if (condEl) { condEl.textContent = s.cond; condEl.style.color = s.cond.includes('true') ? 'var(--accent3)' : 'var(--accent)'; }
+  const im1El = document.getElementById('a3-im1-' + s.rowIdx);
+  if (im1El) { im1El.textContent = s.im1; im1El.style.color = 'var(--accent2)'; }
+  const iEl = document.getElementById('a3-i-' + s.rowIdx);
+  if (iEl) { iEl.textContent = s.iv; iEl.style.color = 'var(--accent2)'; }
+  const ip1El = document.getElementById('a3-ip1-' + s.rowIdx);
+  if (ip1El) { ip1El.textContent = s.ip1; ip1El.style.color = 'var(--accent2)'; }
+  const tempEl2 = document.getElementById('a3-temp-' + s.rowIdx);
+  if (tempEl2) { tempEl2.textContent = s.temp; tempEl2.style.color = 'var(--warning)'; }
+  const chgEl = document.getElementById('a3-chg-' + s.rowIdx);
+  if (chgEl) { chgEl.textContent = s.chg; chgEl.style.color = s.chg.includes('⛔') ? 'var(--accent)' : 'var(--accent3)'; chgEl.style.fontSize = '0.8rem'; }
+
+  expEl.innerHTML = s.explain;
+  expEl.style.borderColor = s.cond.includes('false') ? 'rgba(247,129,102,0.4)' : 'rgba(210,168,255,0.3)';
+  expEl.style.background = s.cond.includes('false') ? 'rgba(247,129,102,0.07)' : 'rgba(210,168,255,0.07)';
+
+  // Side panel: show active line as a labelled badge
+  if (overlay) {
+    overlay.style.display = 'block';
+    if (s.cond.includes('false')) {
+      overlay.style.background = 'rgba(247,129,102,0.15)';
+      overlay.style.border = '1px solid rgba(247,129,102,0.4)';
+      overlay.style.color = 'var(--accent)';
+      overlay.innerHTML = '⬆ <strong>i&lt;6</strong> ist false → Schleife stoppt';
+    } else {
+      overlay.style.background = 'rgba(247,129,102,0.1)';
+      overlay.style.border = '1px solid rgba(247,129,102,0.3)';
+      overlay.style.color = 'var(--accent)';
+      overlay.innerHTML = '⬆ Zeile 8–10: Speicherfehler!<br><span style="font-size:0.72rem; font-family:sans-serif">Mittelwert landet an i-1 statt i</span>';
+    }
+  }
+  if (sideStatus) {
+    sideStatus.textContent = s.cond.includes('false') ? 'i=' + s.i + ': Stopp 🐛 Fehler 1' : 'i=' + s.i + ': Gruppe verarbeitet ✓';
+    sideStatus.style.color = s.cond.includes('false') ? 'var(--accent)' : 'var(--accent3)';
+  }
+
+  // Array visualization
+  a3CurrentArr = [...s.arrAfter];
+  const dispEl = document.getElementById('a3-array-display');
+  dispEl.style.display = 'block';
+  const boxEl = document.getElementById('a3-array-boxes');
+  boxEl.innerHTML = a3CurrentArr.map((v, idx) => {
+    const orig = a3Array[idx];
+    const changed = v !== orig;
+    let color = changed ? (v === 0 ? 'var(--muted)' : 'var(--accent)') : 'var(--accent2)';
+    return `<div style="text-align:center; min-width:40px;">
+      <div style="font-family:'JetBrains Mono';font-size:0.9rem;font-weight:700;color:${color};background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:4px 6px;">${v}</div>
+      <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">[${idx}]</div>
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const qfinOpts = document.getElementById('qfin-options');
+  if (qfinOpts) {
+    const btns = qfinOpts.querySelectorAll('.option-btn');
+    // Options: 0, 12, 12, 40 — after i=2 with buggy code: max=40, max2=10
+    // Let's fix: options should be 0, 10, 12, 40; correct is max2=10
+    btns[0].textContent = '0'; btns[0].onclick = () => checkMCFin(btns[0], false);
+    btns[1].textContent = '10'; btns[1].onclick = () => checkMCFin(btns[1], true);
+    btns[2].textContent = '12'; btns[2].onclick = () => checkMCFin(btns[2], false);
+    btns[3].textContent = '40'; btns[3].onclick = () => checkMCFin(btns[3], false);
+  }
+});
+
+function checkMCFin(btn, isCorrect) {
+  const container = document.getElementById('qfin-options');
+  if (container.querySelector('.correct, .wrong')) return;
+  const fb = document.getElementById('qfin-feedback');
+  if (isCorrect) {
+    btn.classList.add('correct');
+    fb.innerHTML = '✅ <strong>Richtig!</strong> Nach i=2 (CPULoad=40): 40 > max=10 → max2=10, max=40. Also max2 = 10.';
+    fb.className = 'feedback show correct';
+    if (!answeredQuestions.has('qfin')) { score += 3; answeredQuestions.add('qfin'); updateProgress(); }
+  } else {
+    btn.classList.add('wrong');
+    container.querySelectorAll('.option-btn')[1].classList.add('correct');
+    fb.innerHTML = '❌ Nach i=2: CPULoad[2]=40 > max=10 → max2 wird altes max = 10, max = 40.';
+    fb.className = 'feedback show wrong';
+  }
+  container.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+}
+</script>
+</body>
+</html>
