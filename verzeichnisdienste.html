@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verzeichnisdienste & Active Directory – Lerncheck</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d47;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --glow: 0 0 20px rgba(0,212,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 50px 30px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    display: block;
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 30px auto 0;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent);
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--text-dim);
+    font-size: 1rem;
+    margin-top: 12px;
+    font-weight: 300;
+  }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .progress-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* Section headings */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 50px 0 24px;
+  }
+
+  .section-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .icon-blue { background: rgba(0,212,255,0.15); }
+  .icon-purple { background: rgba(124,58,237,0.15); }
+  .icon-green { background: rgba(16,185,129,0.15); }
+  .icon-orange { background: rgba(245,158,11,0.15); }
+
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Question card */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 18px;
+    transition: border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .q-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent2);
+    border-radius: 3px 0 0 3px;
+    opacity: 0.5;
+  }
+
+  .q-card.correct::before { background: var(--accent3); opacity: 1; }
+  .q-card.wrong::before { background: var(--danger); opacity: 1; }
+
+  .q-number {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+
+  .q-text {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.55;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+  }
+
+  /* Multiple choice options */
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    color: var(--text-dim);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(0,212,255,0.05);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-btn.selected-correct {
+    border-color: var(--accent3);
+    background: rgba(16,185,129,0.1);
+    color: #a7f3d0;
+  }
+
+  .option-btn.selected-wrong {
+    border-color: var(--danger);
+    background: rgba(239,68,68,0.1);
+    color: #fca5a5;
+  }
+
+  .option-btn.show-correct {
+    border-color: var(--accent3);
+    background: rgba(16,185,129,0.07);
+    color: #6ee7b7;
+  }
+
+  .opt-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 7px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Text input */
+  .text-input-wrap { position: relative; }
+
+  .text-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 130px 12px 16px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .text-input:focus { border-color: var(--accent); }
+  .text-input::placeholder { color: var(--text-muted); }
+
+  .check-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--accent2);
+    border: none;
+    border-radius: 7px;
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .check-btn:hover { background: #6d28d9; }
+  .check-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .feedback.show { display: block; }
+
+  .feedback.correct {
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.25);
+    color: #6ee7b7;
+  }
+
+  .feedback.wrong {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #fca5a5;
+  }
+
+  .feedback .correct-answer {
+    margin-top: 6px;
+    color: #a7f3d0;
+    font-weight: 600;
+  }
+
+  /* Ordering drag */
+  .drag-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .drag-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+    transition: all 0.2s;
+  }
+
+  .drag-item:active { cursor: grabbing; }
+  .drag-item.dragging { opacity: 0.4; border-color: var(--accent); }
+  .drag-item.drag-over { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+
+  .drag-handle {
+    font-size: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .drag-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 700;
+    width: 16px;
+    flex-shrink: 0;
+  }
+
+  .submit-order-btn {
+    margin-top: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--accent2);
+    border-radius: 9px;
+    color: var(--accent);
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 9px 20px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+
+  .submit-order-btn:hover { background: rgba(124,58,237,0.15); }
+
+  /* Match exercise */
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .match-col-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    padding: 0 0 6px 4px;
+    text-transform: uppercase;
+  }
+
+  .match-term {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+
+  .match-term:hover:not(.matched) { border-color: var(--accent); }
+  .match-term.selected { border-color: var(--accent); background: rgba(0,212,255,0.08); color: var(--accent); }
+  .match-term.matched-correct { border-color: var(--accent3); background: rgba(16,185,129,0.1); color: #6ee7b7; cursor: default; }
+  .match-term.matched-wrong { border-color: var(--danger); background: rgba(239,68,68,0.1); color: #fca5a5; }
+
+  .match-def {
+    background: rgba(124,58,237,0.07);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+
+  .match-def:hover:not(.matched) { border-color: var(--accent2); }
+  .match-def.selected { border-color: var(--accent2); background: rgba(124,58,237,0.15); color: #c4b5fd; }
+  .match-def.matched-correct { border-color: var(--accent3); background: rgba(16,185,129,0.1); color: #6ee7b7; cursor: default; }
+  .match-def.matched-wrong { border-color: var(--danger); background: rgba(239,68,68,0.1); color: #fca5a5; }
+
+  /* Code block */
+  .code-block {
+    background: #050a14;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: #a9b7d0;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+
+  .code-block .kw { color: #7c3aed; }
+  .code-block .str { color: #10b981; }
+  .code-block .cm { color: #475569; font-style: italic; }
+  .code-block .dn { color: #f59e0b; }
+
+  /* Results panel */
+  #results-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    margin-top: 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #results-panel.show { display: block; animation: fadeUp 0.5s ease; }
+
+  #results-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 0 40px rgba(0,212,255,0.2);
+  }
+
+  .score-num {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .result-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result-msg {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-bottom: 28px;
+  }
+
+  .result-bars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .result-bar-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: left;
+  }
+
+  .result-bar-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 8px;
+  }
+
+  .result-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 6px;
+  }
+
+  .result-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent3);
+    transition: width 1s ease 0.3s;
+    width: 0;
+  }
+
+  .result-bar-val {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .retry-btn {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 14px 36px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s;
+  }
+
+  .retry-btn:hover { opacity: 0.85; }
+
+  /* Submit all button */
+  .submit-all-wrap {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .submit-all-btn {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 16px 50px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 32px rgba(0,212,255,0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .submit-all-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,212,255,0.25);
+  }
+
+  /* Info tooltip */
+  .info-tip {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #fbbf24;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .info-tip span { font-size: 15px; flex-shrink: 0; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-card { animation: fadeUp 0.4s ease both; }
+  .q-card:nth-child(2) { animation-delay: 0.05s; }
+  .q-card:nth-child(3) { animation-delay: 0.10s; }
+  .q-card:nth-child(4) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">FI Systemintegration · Lerncheck</div>
+    <h1>Verzeichnisdienste &amp; Active Directory</h1>
+    <p>Prüfungsvorbereitung · LDAP · Kerberos · Berechtigungskonzepte · AD-Struktur</p>
+  </header>
+
+  <div class="progress-bar-wrap">
+    <span class="progress-label">FORTSCHRITT</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-count" id="progress-count">0 / 20</span>
+  </div>
+
+  <!-- ======================== SEKTION 1 ======================== -->
+  <div class="section-header">
+    <div class="section-icon icon-blue">🏗️</div>
+    <div>
+      <div class="section-title">Grundlagen von Verzeichnisdiensten</div>
+      <div class="section-subtitle">01 — Konzepte, Vorteile, Einsatzgebiete</div>
+    </div>
+  </div>
+
+  <!-- Q1: MC -->
+  <div class="q-card" data-q="1">
+    <div class="q-number">FRAGE 01 · Multiple Choice</div>
+    <div class="q-text">Was ist der Hauptvorteil eines zentralen Verzeichnisdienstes wie Active Directory in einem Unternehmen?</div>
+    <div class="options" id="q1-opts">
+      <button class="option-btn" data-q="1" data-idx="0" onclick="answerMC(1,0)"><span class="opt-key">A</span>Zentrale Verwaltung von Benutzern, Berechtigungen und Richtlinien</button>
+      <button class="option-btn" data-q="1" data-idx="1" onclick="answerMC(1,1)"><span class="opt-key">B</span>Höhere Internetgeschwindigkeit durch Lastenverteilung</button>
+      <button class="option-btn" data-q="1" data-idx="2" onclick="answerMC(1,2)"><span class="opt-key">C</span>Automatische Datensicherung aller Dateien auf den Clients</button>
+      <button class="option-btn" data-q="1" data-idx="3" onclick="answerMC(1,3)"><span class="opt-key">D</span>Verschlüsselung der Netzwerkkommunikation auf Layer 2</button>
+    </div>
+    <div class="feedback" id="q1-fb"></div>
+  </div>
+
+  <!-- Q2: MC Multi -->
+  <div class="q-card" data-q="2">
+    <div class="q-number">FRAGE 02 · Mehrfachauswahl (alle richtigen anklicken)</div>
+    <div class="q-text">Welche der folgenden Aussagen beschreiben Vorteile von Verzeichnisdiensten korrekt? (Mehrere Antworten möglich)</div>
+    <div class="options" id="q2-opts">
+      <button class="option-btn" data-q="2" data-idx="0" onclick="toggleMulti(2,0)"><span class="opt-key">A</span>Alle Nutzer können sich an beliebigen Rechnern der Domäne anmelden</button>
+      <button class="option-btn" data-q="2" data-idx="1" onclick="toggleMulti(2,1)"><span class="opt-key">B</span>Einheitliches Passwort für alle Geräte weltweit ohne Sicherheitsinfrastruktur</button>
+      <button class="option-btn" data-q="2" data-idx="2" onclick="toggleMulti(2,2)"><span class="opt-key">C</span>Zentrale Protokollierung für Compliance und Auditing</button>
+      <button class="option-btn" data-q="2" data-idx="3" onclick="toggleMulti(2,3)"><span class="opt-key">D</span>Automatisierung von Verwaltungsaufgaben (z. B. Netzwerklaufwerke verbinden)</button>
+      <button class="option-btn" data-q="2" data-idx="4" onclick="toggleMulti(2,4)"><span class="opt-key">E</span>Verzeichnisdienste ersetzen Firewalls vollständig</button>
+    </div>
+    <button class="submit-order-btn" onclick="checkMulti(2)" style="margin-top:10px">Antwort prüfen</button>
+    <div class="feedback" id="q2-fb"></div>
+  </div>
+
+  <!-- Q3: Text -->
+  <div class="q-card" data-q="3">
+    <div class="q-number">FRAGE 03 · Kurzantwort</div>
+    <div class="q-text">Wie heißt das Konzept, bei dem sich ein Benutzer einmalig anmeldet und ohne weitere Anmeldungen auf verschiedene Dienste zugreifen kann?</div>
+    <div class="text-input-wrap">
+      <input type="text" class="text-input" id="q3-input" placeholder="Abkürzung oder Vollbezeichnung eingeben …">
+      <button class="check-btn" onclick="checkText(3)" id="q3-btn">Prüfen</button>
+    </div>
+    <div class="feedback" id="q3-fb"></div>
+  </div>
+
+  <!-- ======================== SEKTION 2 ======================== -->
+  <div class="section-header">
+    <div class="section-icon icon-purple">🔐</div>
+    <div>
+      <div class="section-title">LDAP &amp; Kerberos</div>
+      <div class="section-subtitle">02 — Protokolle, Struktur, Prüfungsrelevant</div>
+    </div>
+  </div>
+
+  <!-- Q4: MC -->
+  <div class="q-card" data-q="4">
+    <div class="q-number">FRAGE 04 · Multiple Choice</div>
+    <div class="q-text">Wofür steht das Kürzel LDAP und was ist seine Hauptaufgabe?</div>
+    <div class="options" id="q4-opts">
+      <button class="option-btn" data-q="4" data-idx="0" onclick="answerMC(4,0)"><span class="opt-key">A</span>Local Domain Access Protocol – Benutzeranmeldung auf Windows-Clients</button>
+      <button class="option-btn" data-q="4" data-idx="1" onclick="answerMC(4,1)"><span class="opt-key">B</span>Linux Domain Authentication Protocol – Authentifizierung unter Linux</button>
+      <button class="option-btn" data-q="4" data-idx="2" onclick="answerMC(4,2)"><span class="opt-key">C</span>Lightweight Directory Access Protocol – Verwaltung und Abfrage von Verzeichnisinformationen</button>
+      <button class="option-btn" data-q="4" data-idx="3" onclick="answerMC(4,3)"><span class="opt-key">D</span>Layer Data Access Protocol – Datenzugriff auf OSI-Schicht 3</button>
+    </div>
+    <div class="feedback" id="q4-fb"></div>
+  </div>
+
+  <!-- Q5: Ordering (Kerberos Flow) -->
+  <div class="q-card" data-q="5">
+    <div class="q-number">FRAGE 05 · Reihenfolge sortieren (ziehen oder klicken)</div>
+    <div class="q-text">Bringe die Schritte des Kerberos Single Sign-On Prozesses in die richtige Reihenfolge:</div>
+    <div class="info-tip"><span>ℹ️</span><span>Klicke zwei Elemente zum Tauschen oder ziehe sie in die richtige Position.</span></div>
+    <div class="drag-list" id="q5-drag">
+      <div class="drag-item" draggable="true" data-val="3"><span class="drag-handle">⠿</span><span class="drag-num" id="dn5-0">1</span>Benutzer erhält ein Ticket von der AD</div>
+      <div class="drag-item" draggable="true" data-val="1"><span class="drag-handle">⠿</span><span class="drag-num" id="dn5-1">2</span>Benutzer meldet sich mit Benutzername und Passwort an der AD an</div>
+      <div class="drag-item" draggable="true" data-val="4"><span class="drag-handle">⠿</span><span class="drag-num" id="dn5-2">3</span>Benutzer fordert Service-Ticket bei der AD an</div>
+      <div class="drag-item" draggable="true" data-val="2"><span class="drag-handle">⠿</span><span class="drag-num" id="dn5-3">4</span>AD authentifiziert Benutzer mit verschlüsselten Tickets</div>
+      <div class="drag-item" draggable="true" data-val="5"><span class="drag-handle">⠿</span><span class="drag-num" id="dn5-4">5</span>Benutzer greift mit Service-Ticket auf den Dienst zu (SSO aktiv)</div>
+    </div>
+    <button class="submit-order-btn" onclick="checkOrder(5,[1,2,3,4,5])">Reihenfolge prüfen</button>
+    <div class="feedback" id="q5-fb"></div>
+  </div>
+
+  <!-- Q7: Matching -->
+  <div class="q-card" data-q="7">
+    <div class="q-number">FRAGE 07 · Zuordnung</div>
+    <div class="q-text">Ordne den AD-Protokollen ihre Hauptaufgabe zu. Wähle zuerst einen Begriff (links), dann die passende Definition (rechts).</div>
+    <div class="match-grid">
+      <div>
+        <div class="match-col-label">Protokoll</div>
+        <div class="match-term" id="mt7-0" data-id="0" onclick="selectMatchTerm(7,0)">LDAP</div>
+        <div class="match-term" id="mt7-1" data-id="1" onclick="selectMatchTerm(7,1)">Kerberos</div>
+        <div class="match-term" id="mt7-2" data-id="2" onclick="selectMatchTerm(7,2)">SMB</div>
+      </div>
+      <div>
+        <div class="match-col-label">Funktion</div>
+        <div class="match-def" id="md7-0" data-id="1" onclick="selectMatchDef(7,0)">Sicheres Authentifizierungsprotokoll mit verschlüsselten Tickets (SSO)</div>
+        <div class="match-def" id="md7-1" data-id="2" onclick="selectMatchDef(7,1)">Protokoll für Netzwerkfreigaben (Datei- und Druckerdienste)</div>
+        <div class="match-def" id="md7-2" data-id="0" onclick="selectMatchDef(7,2)">Verwaltung und Abfrage von Verzeichnisinformationen</div>
+      </div>
+    </div>
+    <div class="feedback" id="q7-fb"></div>
+  </div>
+
+  <!-- ======================== SEKTION 3 ======================== -->
+  <div class="section-header">
+    <div class="section-icon icon-green">🌳</div>
+    <div>
+      <div class="section-title">AD-Struktur: Domäne, Forest, OU</div>
+      <div class="section-subtitle">03 — Logische Hierarchie von Active Directory</div>
+    </div>
+  </div>
+
+  <!-- Q8: MC -->
+  <div class="q-card" data-q="8">
+    <div class="q-number">FRAGE 08 · Multiple Choice</div>
+    <div class="q-text">Was ist eine AD-Domäne?</div>
+    <div class="options" id="q8-opts">
+      <button class="option-btn" data-q="8" data-idx="0" onclick="answerMC(8,0)"><span class="opt-key">A</span>Eine physische Servereinheit mit eigenem Netzteil</button>
+      <button class="option-btn" data-q="8" data-idx="1" onclick="answerMC(8,1)"><span class="opt-key">B</span>Ein VPN-Tunnel zwischen zwei Standorten</button>
+      <button class="option-btn" data-q="8" data-idx="2" onclick="answerMC(8,2)"><span class="opt-key">C</span>Eine Subnetz-Maske zur IP-Adressverwaltung</button>
+      <button class="option-btn" data-q="8" data-idx="3" onclick="answerMC(8,3)"><span class="opt-key">D</span>Logischer Zusammenschluss von Ressourcen unter gemeinsamer Verwaltung mit eigenem FQDN</button>
+    </div>
+    <div class="feedback" id="q8-fb"></div>
+  </div>
+
+  <!-- Q9: Text -->
+  <div class="q-card" data-q="9">
+    <div class="q-number">FRAGE 09 · Kurzantwort</div>
+    <div class="q-text">Was ist ein AD Forest und was teilen die Domänen innerhalb eines Forests?</div>
+    <div class="text-input-wrap">
+      <input type="text" class="text-input" id="q9-input" placeholder="Stichwörter eingeben: Sammlung aus … teilen sich …">
+      <button class="check-btn" onclick="checkText(9)" id="q9-btn">Prüfen</button>
+    </div>
+    <div class="feedback" id="q9-fb"></div>
+  </div>
+
+  <!-- Q10: MC -->
+  <div class="q-card" data-q="10">
+    <div class="q-number">FRAGE 10 · Multiple Choice</div>
+    <div class="q-text">Firma DagobertDuck.com möchte ihr Active Directory intern von ihrer öffentlichen Website trennen. Welche Domain-Struktur wäre typisch?</div>
+    <div class="options" id="q10-opts">
+      <button class="option-btn" data-q="10" data-idx="0" onclick="answerMC(10,0)"><span class="opt-key">A</span>DagobertDuck.de als separate Top-Level-Domain</button>
+      <button class="option-btn" data-q="10" data-idx="1" onclick="answerMC(10,1)"><span class="opt-key">B</span>192.168.1.0/24 als IP-basierter Domänenname</button>
+      <button class="option-btn" data-q="10" data-idx="2" onclick="answerMC(10,2)"><span class="opt-key">C</span>DagobertDuck.com/AD als URL-Pfad im Webserver</button>
+      <button class="option-btn" data-q="10" data-idx="3" onclick="answerMC(10,3)"><span class="opt-key">D</span>ad.DagobertDuck.com oder internal.DagobertDuck.com als interne Subdomain</button>
+    </div>
+    <div class="feedback" id="q10-fb"></div>
+  </div>
+
+  <!-- Q11: MC -->
+  <div class="q-card" data-q="11">
+    <div class="q-number">FRAGE 11 · Multiple Choice</div>
+    <div class="q-text">Was ist eine Organizational Unit (OU) in Active Directory und wofür wird sie hauptsächlich genutzt?</div>
+    <div class="options" id="q11-opts">
+      <button class="option-btn" data-q="11" data-idx="0" onclick="answerMC(11,0)"><span class="opt-key">A</span>Logischer Container für Benutzer, Computer und Gruppen – Ankerpunkt für GPOs</button>
+      <button class="option-btn" data-q="11" data-idx="1" onclick="answerMC(11,1)"><span class="opt-key">B</span>Ein physischer Serverraum in einem Rechenzentrum</button>
+      <button class="option-btn" data-q="11" data-idx="2" onclick="answerMC(11,2)"><span class="opt-key">C</span>Ein redundantes Dateisystem für automatische Backups</button>
+      <button class="option-btn" data-q="11" data-idx="3" onclick="answerMC(11,3)"><span class="opt-key">D</span>Ein physisches Netzwerksegment (entspricht einem VLAN)</button>
+    </div>
+    <div class="feedback" id="q11-fb"></div>
+  </div>
+
+  <!-- ======================== SEKTION 4 ======================== -->
+  <div class="section-header">
+    <div class="section-icon icon-orange">🔑</div>
+    <div>
+      <div class="section-title">Berechtigungskonzepte &amp; Gruppenrichtlinien</div>
+      <div class="section-subtitle">04 — GPOs, Zugriffsrechte, AGDLP-Prinzip</div>
+    </div>
+  </div>
+
+  <!-- Q12: GPO vs Zugriffsrecht – per-row choice -->
+  <div class="q-card" data-q="12">
+    <div class="q-number">FRAGE 12 · Zuordnung (je Zeile wählen)</div>
+    <div class="q-text">Handelt es sich jeweils um eine <strong>Gruppenrichtlinie (GPO)</strong> oder ein <strong>Zugriffsrecht</strong>? Wähle pro Zeile die richtige Kategorie.</div>
+    <div style="display:grid;gap:12px;" id="q12-rows">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:10px;">📋 Passwort-Mindestlänge von 10 Zeichen erzwingen</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r0-gpo" onclick="answerRow12(0,'gpo')"><span class="opt-key">A</span>GPO</button>
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r0-acl" onclick="answerRow12(0,'acl')"><span class="opt-key">B</span>Zugriffsrecht</button>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:10px;">📁 Marketing-Gruppe darf auf Ordner „Marketing" zugreifen</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r1-gpo" onclick="answerRow12(1,'gpo')"><span class="opt-key">A</span>GPO</button>
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r1-acl" onclick="answerRow12(1,'acl')"><span class="opt-key">B</span>Zugriffsrecht</button>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+        <div style="font-size:0.88rem;color:var(--text-dim);margin-bottom:10px;">🖥️ Desktop-Hintergrundbild für alle Rechner festlegen</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r2-gpo" onclick="answerRow12(2,'gpo')"><span class="opt-key">A</span>GPO</button>
+          <button class="option-btn" style="flex:1;min-width:120px;justify-content:center;" id="q12r2-acl" onclick="answerRow12(2,'acl')"><span class="opt-key">B</span>Zugriffsrecht</button>
+        </div>
+      </div>
+    </div>
+    <button class="submit-order-btn" onclick="submitQ12()" style="margin-top:12px" id="q12-submit-btn">Auswertung</button>
+    <div class="feedback" id="q12-fb"></div>
+  </div>
+
+  <!-- Q13: MC -->
+  <div class="q-card" data-q="13">
+    <div class="q-number">FRAGE 13 · Multiple Choice</div>
+    <div class="q-text">Auf welche Objekte werden Gruppenrichtlinien (GPOs) angewendet – und auf welche NICHT?</div>
+    <div class="options" id="q13-opts">
+      <button class="option-btn" data-q="13" data-idx="0" onclick="answerMC(13,0)"><span class="opt-key">A</span>GPOs werden direkt auf Gruppen angewendet</button>
+      <button class="option-btn" data-q="13" data-idx="1" onclick="answerMC(13,1)"><span class="opt-key">B</span>GPOs werden auf Dateien und Ordner angewendet</button>
+      <button class="option-btn" data-q="13" data-idx="2" onclick="answerMC(13,2)"><span class="opt-key">C</span>GPOs werden auf Domänen und OUs angewendet, nicht direkt auf Gruppen</button>
+      <button class="option-btn" data-q="13" data-idx="3" onclick="answerMC(13,3)"><span class="opt-key">D</span>GPOs werden nur auf einzelne Benutzerkonten angewendet</button>
+    </div>
+    <div class="feedback" id="q13-fb"></div>
+  </div>
+
+  <!-- Q14: MC -->
+  <div class="q-card" data-q="14">
+    <div class="q-number">FRAGE 14 · Multiple Choice</div>
+    <div class="q-text">Benutzer Max ist in der OU "IT-Department", Anna in der OU "Finanz-Department". Beide sollen auf den Ordner "Projektdaten" zugreifen. Wie wird das in AD am besten gelöst?</div>
+    <div class="options" id="q14-opts">
+      <button class="option-btn" data-q="14" data-idx="0" onclick="answerMC(14,0)"><span class="opt-key">A</span>Max und Anna werden in dieselbe OU verschoben</button>
+      <button class="option-btn" data-q="14" data-idx="1" onclick="answerMC(14,1)"><span class="opt-key">B</span>Zugriffsrechte werden per GPO direkt auf den Ordner gesetzt</button>
+      <button class="option-btn" data-q="14" data-idx="2" onclick="answerMC(14,2)"><span class="opt-key">C</span>Sicherheitsgruppe "Projekt-Team" erstellen, Max und Anna aufnehmen, Gruppe erhält Ordnerberechtigung</button>
+      <button class="option-btn" data-q="14" data-idx="3" onclick="answerMC(14,3)"><span class="opt-key">D</span>Ordner für alle Benutzer des Forests freigeben</button>
+    </div>
+    <div class="feedback" id="q14-fb"></div>
+  </div>
+
+  <!-- ======================== SEKTION 5 ======================== -->
+  <div class="section-header">
+    <div class="section-icon icon-blue">💻</div>
+    <div>
+      <div class="section-title">Praxiswissen &amp; Prüfungsfragen</div>
+      <div class="section-subtitle">05 — Anwendungswissen, PowerShell, Szenarien</div>
+    </div>
+  </div>
+
+  <!-- Q17: Multi-select -->
+  <div class="q-card" data-q="17">
+    <div class="q-number">FRAGE 17 · Mehrfachauswahl</div>
+    <div class="q-text">Welche Objekte können in Active Directory existieren? (Alle zutreffenden wählen)</div>
+    <div class="options" id="q17-opts">
+      <button class="option-btn" data-q="17" data-idx="0" onclick="toggleMulti(17,0)"><span class="opt-key">A</span>Benutzerkonten</button>
+      <button class="option-btn" data-q="17" data-idx="1" onclick="toggleMulti(17,1)"><span class="opt-key">B</span>Computerkonten</button>
+      <button class="option-btn" data-q="17" data-idx="2" onclick="toggleMulti(17,2)"><span class="opt-key">C</span>Drucker</button>
+      <button class="option-btn" data-q="17" data-idx="3" onclick="toggleMulti(17,3)"><span class="opt-key">D</span>VLAN-Konfigurationen</button>
+      <button class="option-btn" data-q="17" data-idx="4" onclick="toggleMulti(17,4)"><span class="opt-key">E</span>Gruppen</button>
+    </div>
+    <button class="submit-order-btn" onclick="checkMulti(17)" style="margin-top:10px">Antwort prüfen</button>
+    <div class="feedback" id="q17-fb"></div>
+  </div>
+
+  <!-- Q18: MC -->
+  <div class="q-card" data-q="18">
+    <div class="q-number">FRAGE 18 · Szenario</div>
+    <div class="q-text">Die Vertriebsabteilung hat eine eigene OU. Alle Mitarbeiter dort sollen dieselben Passwort-Richtlinien bekommen. Zusätzlich soll nur die Vertriebsgruppe auf den Drucker "Drucker-Vertrieb" zugreifen dürfen. Was wird wofür genutzt?</div>
+    <div class="options" id="q18-opts">
+      <button class="option-btn" data-q="18" data-idx="0" onclick="answerMC(18,0)"><span class="opt-key">A</span>GPO an die OU für Passwort-Richtlinie; Sicherheitsgruppe für Druckerzugriff</button>
+      <button class="option-btn" data-q="18" data-idx="1" onclick="answerMC(18,1)"><span class="opt-key">B</span>Sicherheitsgruppe für Passwort-Richtlinie; GPO für Druckerzugriff</button>
+      <button class="option-btn" data-q="18" data-idx="2" onclick="answerMC(18,2)"><span class="opt-key">C</span>Beides wird über eine GPO gesteuert</button>
+      <button class="option-btn" data-q="18" data-idx="3" onclick="answerMC(18,3)"><span class="opt-key">D</span>Beides wird über Sicherheitsgruppen gesteuert</button>
+    </div>
+    <div class="feedback" id="q18-fb"></div>
+  </div>
+
+  <!-- Q19: MC -->
+  <div class="q-card" data-q="19">
+    <div class="q-number">FRAGE 19 · Multiple Choice</div>
+    <div class="q-text">Welche Aussage zum globalen Katalog (Global Catalog) im AD Forest ist korrekt?</div>
+    <div class="options" id="q19-opts">
+      <button class="option-btn" data-q="19" data-idx="0" onclick="answerMC(19,0)"><span class="opt-key">A</span>Enthält alle NTFS-Berechtigungen aller Dateien</button>
+      <button class="option-btn" data-q="19" data-idx="1" onclick="answerMC(19,1)"><span class="opt-key">B</span>Ist eine Backup-Kopie des DNS-Servers</button>
+      <button class="option-btn" data-q="19" data-idx="2" onclick="answerMC(19,2)"><span class="opt-key">C</span>Ermöglicht Suche über alle Domänen des Forests, z. B. nach E-Mail-Adressen anderer Domänen</button>
+      <button class="option-btn" data-q="19" data-idx="3" onclick="answerMC(19,3)"><span class="opt-key">D</span>Enthält ausschließlich Computerkonten aller Domänen</button>
+    </div>
+    <div class="feedback" id="q19-fb"></div>
+  </div>
+
+  <!-- Submit All -->
+  <div class="submit-all-wrap">
+    <button class="submit-all-btn" onclick="showResults()">🎯 Ergebnis auswerten</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results-panel">
+    <div class="score-circle">
+      <span class="score-num" id="res-score">0</span>
+      <span class="score-label">PUNKTE</span>
+    </div>
+    <div class="result-title" id="res-title">Ergebnis</div>
+    <div class="result-msg" id="res-msg"></div>
+    <div class="result-bars" id="res-bars"></div>
+    <button class="retry-btn" onclick="resetAll()">🔄 Nochmal versuchen</button>
+  </div>
+
+</div>
+
+<script>
+// ======================== STATE ========================
+const state = {
+  answered: {},   // q -> true/false
+  score: 0,
+  multiSel: {},   // q -> Set of selected indices
+  matchState: {}, // q -> {selTerm, selDef, pairs}
+  q12rows: {},    // row index -> 'gpo'|'acl'|null
+  dragSel: null,
+  total: 16
+};
+
+// ======================== PROGRESS ========================
+function updateProgress() {
+  const done = Object.keys(state.answered).length;
+  const pct = (done / state.total) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-count').textContent = done + ' / ' + state.total;
+}
+
+// ======================== MC (single) ========================
+const mcAnswers = {
+  1: 0,   // A – Zentrale Verwaltung
+  4: 2,   // C – Lightweight Directory Access Protocol
+  8: 3,   // D – Logischer Zusammenschluss
+  10: 3,  // D – Subdomain
+  11: 0,  // A – Logischer Container
+  13: 2,  // C – Domänen und OUs, nicht Gruppen
+  14: 2,  // C – Sicherheitsgruppe
+  18: 0,  // A – GPO für Richtlinie, Gruppe für Drucker
+  19: 2   // C – Globaler Katalog
+};
+
+const mcFeedback = {
+  1: "Richtig! Der Hauptvorteil ist die zentrale Verwaltung: Benutzer, Berechtigungen und Richtlinien werden an einem Ort konfiguriert und gelten für alle angebundenen Systeme.",
+  4: "Richtig! LDAP (Lightweight Directory Access Protocol) ist das Standardprotokoll zum Zugriff auf und zur Verwaltung von Verzeichnisdiensten wie Active Directory.",
+  8: "Richtig! Eine AD-Domäne ist ein logischer Container für Netzwerkobjekte mit einem gemeinsamen FQDN (Fully Qualified Domain Name) als Bezeichner.",
+  10: "Richtig! Typisch ist eine interne Subdomain wie ad.DagobertDuck.com oder internal.DagobertDuck.com, die von der öffentlichen Website getrennt bleibt.",
+  11: "Richtig! Organizational Units dienen als logische Behälter und sind der Ansatzpunkt für GPOs – so können Richtlinien gezielt auf Teilbereiche der Domäne angewendet werden.",
+  13: "Richtig! GPOs werden auf Domänen und OUs verknüpft – nicht direkt auf Gruppen. Gruppen dienen der Berechtigungsverwaltung, nicht der GPO-Verknüpfung.",
+  14: "Richtig! Sicherheitsgruppen ermöglichen, Benutzern aus verschiedenen OUs die gleichen Berechtigungen zu erteilen.",
+  18: "Richtig! GPOs steuern Konfigurationen wie Passwort-Richtlinien und werden an OUs verknüpft. Zugriffsrechte auf Ressourcen wie Drucker werden über Sicherheitsgruppen vergeben.",
+  19: "Richtig! Der globale Katalog ist ein Forest-weites Verzeichnis mit Teilinformationen aus allen Domänen, das domänenübergreifende Suchanfragen ermöglicht."
+};
+
+// ======================== Q12 ROW LOGIC ========================
+// correct: row 0 = gpo, row 1 = acl, row 2 = gpo
+const q12correct = ['gpo', 'acl', 'gpo'];
+
+function answerRow12(row, choice) {
+  if (state.answered[12]) return;
+  state.q12rows[row] = choice;
+  // Update button visuals for this row
+  const gpoBtn = document.getElementById(`q12r${row}-gpo`);
+  const aclBtn = document.getElementById(`q12r${row}-acl`);
+  gpoBtn.style.borderColor = '';
+  gpoBtn.style.background = '';
+  gpoBtn.style.color = '';
+  aclBtn.style.borderColor = '';
+  aclBtn.style.background = '';
+  aclBtn.style.color = '';
+  const activeBtn = choice === 'gpo' ? gpoBtn : aclBtn;
+  activeBtn.style.borderColor = 'var(--accent2)';
+  activeBtn.style.background = 'rgba(124,58,237,0.12)';
+  activeBtn.style.color = '#c4b5fd';
+}
+
+function submitQ12() {
+  if (state.answered[12]) return;
+  state.answered[12] = true;
+  document.getElementById('q12-submit-btn').disabled = true;
+
+  let allCorrect = true;
+  for (let r = 0; r < 3; r++) {
+    const chosen = state.q12rows[r] || null;
+    const correct = q12correct[r];
+    const gpoBtn = document.getElementById(`q12r${r}-gpo`);
+    const aclBtn = document.getElementById(`q12r${r}-acl`);
+    [gpoBtn, aclBtn].forEach(b => { b.disabled = true; b.style.borderColor=''; b.style.background=''; b.style.color=''; });
+    // Show correct answer green
+    const correctBtn = correct === 'gpo' ? gpoBtn : aclBtn;
+    correctBtn.style.borderColor = 'var(--accent3)';
+    correctBtn.style.background = 'rgba(16,185,129,0.1)';
+    correctBtn.style.color = '#6ee7b7';
+    if (chosen !== correct) {
+      allCorrect = false;
+      if (chosen) {
+        const wrongBtn = chosen === 'gpo' ? gpoBtn : aclBtn;
+        wrongBtn.style.borderColor = 'var(--danger)';
+        wrongBtn.style.background = 'rgba(239,68,68,0.1)';
+        wrongBtn.style.color = '#fca5a5';
+      }
+    }
+  }
+
+  if (allCorrect) {
+    showFeedback(12, true, 'Richtig! Passwort-Richtlinie = GPO, Ordner-Zugriff = Zugriffsrecht (NTFS), Desktop-Hintergrund = GPO.');
+    state.score++;
+  } else {
+    showFeedback(12, false, 'Nicht ganz. GPOs steuern Konfigurationen (Passwort-Richtlinien, Desktop-Einstellungen). Zugriffsrechte regeln den Zugriff auf Dateien und Ordner.');
+  }
+  document.querySelector('[data-q="12"]').classList.add(allCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+function answerMC(q, idx) {
+  if (state.answered[q]) return;
+  state.answered[q] = true;
+
+  const correct = mcAnswers[q];
+  const btns = document.querySelectorAll(`#q${q}-opts .option-btn`);
+  btns.forEach(b => b.disabled = true);
+
+  if (idx === correct) {
+    btns[idx].classList.add('selected-correct');
+    showFeedback(q, true, mcFeedback[q]);
+    state.score++;
+  } else {
+    btns[idx].classList.add('selected-wrong');
+    btns[correct].classList.add('show-correct');
+    const wrongMsg = {
+      1: "Leider falsch. Ein Verzeichnisdienst verbessert keine Internetgeschwindigkeit.",
+      4: "Leider falsch. LDAP steht für Lightweight Directory Access Protocol.",
+      8: "Leider falsch. Eine Domäne ist eine logische, keine physische Einheit.",
+      10: "Leider falsch. Eine Subdomain der bestehenden Domain ist die typische Lösung.",
+      11: "Leider falsch. OUs sind logische Container, keine physischen Einheiten.",
+      13: "Leider falsch. GPOs werden auf OUs und Domänen angewendet, nicht auf Gruppen.",
+      14: "Leider falsch. Benutzer aus verschiedenen OUs sollten über eine gemeinsame Gruppe berechtigt werden.",
+      18: "Leider falsch. GPOs gelten für Konfigurationen an OUs – Zugriffsrechte auf Ressourcen werden über Gruppen vergeben.",
+      19: "Leider falsch. Der globale Katalog dient der Forest-weiten Suche nach Objekten."
+    };
+    showFeedback(q, false, wrongMsg[q], `Richtige Antwort: Option ${String.fromCharCode(65+correct)}`);
+  }
+
+  document.querySelector(`[data-q="${q}"]`).classList.add(idx === correct ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+// ======================== MULTI-SELECT ========================
+const multiAnswers = {
+  2: new Set([0, 2, 3]),
+  17: new Set([0, 1, 2, 4])
+};
+
+function toggleMulti(q, idx) {
+  if (state.answered[q]) return;
+  if (!state.multiSel[q]) state.multiSel[q] = new Set();
+  const btn = document.querySelector(`#q${q}-opts .option-btn:nth-child(${idx+1})`);
+  if (state.multiSel[q].has(idx)) {
+    state.multiSel[q].delete(idx);
+    btn.style.borderColor = '';
+    btn.style.background = '';
+    btn.style.color = '';
+  } else {
+    state.multiSel[q].add(idx);
+    btn.style.borderColor = 'var(--accent2)';
+    btn.style.background = 'rgba(124,58,237,0.1)';
+    btn.style.color = '#c4b5fd';
+  }
+}
+
+function checkMulti(q) {
+  if (state.answered[q]) return;
+  state.answered[q] = true;
+  const sel = state.multiSel[q] || new Set();
+  const correct = multiAnswers[q];
+  const btns = document.querySelectorAll(`#q${q}-opts .option-btn`);
+  btns.forEach(b => { b.disabled = true; b.style.borderColor=''; b.style.background=''; b.style.color=''; });
+
+  let allCorrect = true;
+  correct.forEach(i => { btns[i].classList.add('show-correct'); });
+  sel.forEach(i => {
+    if (correct.has(i)) btns[i].classList.add('selected-correct');
+    else { btns[i].classList.add('selected-wrong'); allCorrect = false; }
+  });
+  correct.forEach(i => { if (!sel.has(i)) allCorrect = false; });
+
+  const msgs = {
+    2: "Die richtigen Antworten sind A, C und D. Verzeichnisdienste ermöglichen u.a. netzwerkweite Anmeldung, zentrale Protokollierung und Automatisierung.",
+    17: "Die richtigen Antworten sind A, B, C und E. VLAN-Konfigurationen sind keine AD-Objekte – VLANs werden auf Netzwerkhardware (Switches) konfiguriert."
+  };
+
+  if (allCorrect) { showFeedback(q, true, msgs[q]); state.score++; }
+  else showFeedback(q, false, msgs[q]);
+
+  document.querySelector(`[data-q="${q}"]`).classList.add(allCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+// ======================== TEXT INPUT ========================
+const textAnswers = {
+  3: { keywords: ['sso','single sign-on','single sign on','einmalanmeldung'], answer: 'Single Sign-On (SSO)', hint: 'Das Konzept heißt Single Sign-On (kurz SSO) – einmalige Anmeldung für mehrere Dienste.' },
+  9: { keywords: ['sammlung','forest','domänen','schema','globaler katalog','global catalog'], answer: 'Ein Forest ist eine Sammlung von Domänen, die gemeinsam ein Schema (Objektdefinitionen) und einen globalen Katalog teilen.', hint: 'Stichwörter: Sammlung von Domänen, gemeinsames Schema, globaler Katalog' },
+  15: { keywords: ['pfad','position','hierarchie','dn','distinguished','standort','lokation','wo','adresse'], answer: 'Der DN beschreibt den eindeutigen Pfad/die Position eines Objekts in der LDAP-Verzeichnishierarchie.', hint: 'Der Distinguished Name (DN) gibt den vollständigen Pfad eines Objekts in der LDAP-Baumstruktur an.' }
+};
+
+function checkText(q) {
+  if (state.answered[q]) return;
+  const inp = document.getElementById(`q${q}-input`);
+  const val = inp.value.toLowerCase().trim();
+  if (!val) return;
+
+  state.answered[q] = true;
+  inp.disabled = true;
+  document.getElementById(`q${q}-btn`).disabled = true;
+
+  const ta = textAnswers[q];
+  const isCorrect = ta.keywords.some(k => val.includes(k));
+
+  if (isCorrect) {
+    inp.style.borderColor = 'var(--accent3)';
+    showFeedback(q, true, '✓ Gut! ' + ta.answer);
+    state.score++;
+  } else {
+    inp.style.borderColor = 'var(--danger)';
+    showFeedback(q, false, ta.hint, 'Musterlösung: ' + ta.answer);
+  }
+
+  document.querySelector(`[data-q="${q}"]`).classList.add(isCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+// Allow Enter key
+document.querySelectorAll('.text-input').forEach(inp => {
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = parseInt(inp.id.replace('q','').replace('-input',''));
+      checkText(q);
+    }
+  });
+});
+
+// ======================== ORDERING ========================
+let draggedItem = null;
+let clickedItem = null;
+
+document.querySelectorAll('.drag-item').forEach(item => {
+  item.addEventListener('dragstart', () => { draggedItem = item; item.classList.add('dragging'); });
+  item.addEventListener('dragend', () => { draggedItem = null; item.classList.remove('dragging'); document.querySelectorAll('.drag-item').forEach(i => i.classList.remove('drag-over')); });
+  item.addEventListener('dragover', e => { e.preventDefault(); item.classList.add('drag-over'); });
+  item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+  item.addEventListener('drop', e => {
+    e.preventDefault();
+    item.classList.remove('drag-over');
+    if (draggedItem && draggedItem !== item) {
+      const list = item.parentNode;
+      const items = [...list.children];
+      const fromIdx = items.indexOf(draggedItem);
+      const toIdx = items.indexOf(item);
+      if (fromIdx < toIdx) list.insertBefore(draggedItem, item.nextSibling);
+      else list.insertBefore(draggedItem, item);
+      updateDragNums(list);
+    }
+  });
+  // Click-to-swap
+  item.addEventListener('click', () => {
+    if (state.answered[5]) return;
+    if (!clickedItem) {
+      clickedItem = item;
+      item.style.outline = '2px solid var(--accent)';
+    } else if (clickedItem === item) {
+      item.style.outline = '';
+      clickedItem = null;
+    } else {
+      const list = item.parentNode;
+      const items = [...list.children];
+      const aIdx = items.indexOf(clickedItem);
+      const bIdx = items.indexOf(item);
+      if (aIdx < bIdx) { list.insertBefore(item, clickedItem); list.insertBefore(clickedItem, items[bIdx+1] || null); }
+      else { list.insertBefore(clickedItem, item); list.insertBefore(item, items[aIdx+1] || null); }
+      clickedItem.style.outline = '';
+      clickedItem = null;
+      updateDragNums(list);
+    }
+  });
+});
+
+function updateDragNums(list) {
+  [...list.children].forEach((item, i) => {
+    const num = item.querySelector('.drag-num');
+    if (num) num.textContent = i+1;
+  });
+}
+
+function checkOrder(q, correctOrder) {
+  if (state.answered[q]) return;
+  state.answered[q] = true;
+  const list = document.getElementById(`q${q}-drag`);
+  const items = [...list.children];
+  const vals = items.map(i => parseInt(i.dataset.val));
+  const isCorrect = vals.every((v,i) => v === correctOrder[i]);
+
+  items.forEach(item => { item.draggable = false; item.style.cursor = 'default'; item.onclick = null; });
+
+  if (isCorrect) {
+    items.forEach(i => { i.style.borderColor='var(--accent3)'; i.style.background='rgba(16,185,129,0.08)'; });
+    showFeedback(q, true, 'Perfekt! Die Kerberos-Schritte: 1. Anmeldung → 2. KDC authentifiziert → 3. TGT erhalten → 4. Service-Ticket anfordern → 5. Dienst nutzen (SSO)');
+    state.score++;
+  } else {
+    const correctItems = [
+      'Benutzer meldet sich mit Benutzername und Passwort an',
+      'KDC authentifiziert Benutzer mit verschlüsselten Tickets',
+      'Benutzer erhält ein Ticket-Granting-Ticket (TGT) vom KDC',
+      'Benutzer fordert Service-Ticket beim TGS an',
+      'Benutzer greift mit Service-Ticket auf den Dienst zu (SSO aktiv)'
+    ];
+    showFeedback(q, false, 'Leider nicht ganz richtig.', 'Richtige Reihenfolge: 1. Anmeldung → 2. KDC-Authentifizierung → 3. TGT erhalten → 4. Service-Ticket anfordern → 5. Dienst nutzen');
+  }
+
+  document.querySelector(`[data-q="${q}"]`).classList.add(isCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+// ======================== MATCHING ========================
+const matchData = {
+  7: { pairs: [[0,2],[1,0],[2,1]], labels: ['LDAP','Kerberos','SMB'] },
+  12: { pairs: [[0,0],[1,1],[2,0]], labels: ['Passwort-Richtlinie','Marketing Ordner','Desktop-Hintergrund'] }
+};
+
+function initMatch(q) {
+  if (!state.matchState[q]) {
+    state.matchState[q] = { selTerm: null, selDef: null, matched: 0, total: matchData[q].pairs.length, wrong: 0 };
+  }
+}
+
+function selectMatchTerm(q, termIdx) {
+  initMatch(q);
+  const ms = state.matchState[q];
+  if (document.getElementById(`mt${q}-${termIdx}`).classList.contains('matched-correct')) return;
+  // deselect previous
+  if (ms.selTerm !== null) document.getElementById(`mt${q}-${ms.selTerm}`).classList.remove('selected');
+  ms.selTerm = termIdx;
+  document.getElementById(`mt${q}-${termIdx}`).classList.add('selected');
+  if (ms.selDef !== null) tryMatch(q);
+}
+
+function selectMatchDef(q, defIdx) {
+  initMatch(q);
+  const ms = state.matchState[q];
+  if (document.getElementById(`md${q}-${defIdx}`).classList.contains('matched-correct')) return;
+  if (ms.selDef !== null) document.getElementById(`md${q}-${ms.selDef}`).classList.remove('selected');
+  ms.selDef = defIdx;
+  document.getElementById(`md${q}-${defIdx}`).classList.add('selected');
+  if (ms.selTerm !== null) tryMatch(q);
+}
+
+function tryMatch(q) {
+  const ms = state.matchState[q];
+  const md = matchData[q];
+  const termEl = document.getElementById(`mt${q}-${ms.selTerm}`);
+  const defEl = document.getElementById(`md${q}-${ms.selDef}`);
+
+  const termId = parseInt(termEl.dataset.id);
+  const defId = parseInt(defEl.dataset.id);
+  const correct = termId === defId;
+
+  termEl.classList.remove('selected');
+  defEl.classList.remove('selected');
+
+  if (correct) {
+    termEl.classList.add('matched-correct');
+    defEl.classList.add('matched-correct');
+    ms.matched++;
+    if (ms.matched === ms.total && ms.wrong === 0) {
+      if (!state.answered[q]) { state.answered[q] = true; state.score++; document.querySelector(`[data-q="${q}"]`).classList.add('correct'); updateProgress(); showFeedback(q, true, 'Alle Zuordnungen korrekt! 🎉'); }
+    } else if (ms.matched === ms.total) {
+      if (!state.answered[q]) { state.answered[q] = true; document.querySelector(`[data-q="${q}"]`).classList.add('wrong'); updateProgress(); showFeedback(q, false, 'Zuordnung abgeschlossen, aber es gab fehlerhafte Paare.'); }
+    }
+  } else {
+    termEl.classList.add('matched-wrong');
+    defEl.classList.add('matched-wrong');
+    ms.wrong++;
+    setTimeout(() => {
+      termEl.classList.remove('matched-wrong');
+      defEl.classList.remove('matched-wrong');
+    }, 800);
+  }
+
+  ms.selTerm = null;
+  ms.selDef = null;
+}
+
+// ======================== FEEDBACK HELPER ========================
+function showFeedback(q, correct, msg, extra) {
+  const fb = document.getElementById(`q${q}-fb`);
+  fb.className = 'feedback show ' + (correct ? 'correct' : 'wrong');
+  fb.innerHTML = (correct ? '✓ ' : '✗ ') + msg + (extra ? `<div class="correct-answer">${extra}</div>` : '');
+}
+
+// ======================== RESULTS ========================
+function showResults() {
+  const panel = document.getElementById('results-panel');
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const s = state.score;
+  const t = state.total;
+  const pct = Math.round((s/t)*100);
+
+  document.getElementById('res-score').textContent = s + '/' + t;
+
+  let title, msg;
+  if (pct >= 85) { title = '🏆 Ausgezeichnet!'; msg = `${pct}% – Du bist bestens auf die Prüfung vorbereitet!`; }
+  else if (pct >= 65) { title = '👍 Gut gemacht!'; msg = `${pct}% – Solides Wissen. Noch ein paar Lücken schließen!`; }
+  else if (pct >= 45) { title = '📚 Weitermachen!'; msg = `${pct}% – Grundwissen vorhanden, aber intensivere Wiederholung empfohlen.`; }
+  else { title = '🔄 Noch Nachholbedarf'; msg = `${pct}% – Gehe die Themen nochmals systematisch durch.`; }
+
+  document.getElementById('res-title').textContent = title;
+  document.getElementById('res-msg').textContent = msg;
+
+  const cats = [
+    { name: 'Grundlagen', qs: [1,2,3], score: [1,2,3].filter(q=>state.answered[q] && document.querySelector(`[data-q="${q}"]`).classList.contains('correct')).length },
+    { name: 'LDAP & Kerberos', qs: [4,5,7], score: [4,5,7].filter(q=>state.answered[q] && document.querySelector(`[data-q="${q}"]`).classList.contains('correct')).length },
+    { name: 'AD-Struktur', qs: [8,9,10,11], score: [8,9,10,11].filter(q=>state.answered[q] && document.querySelector(`[data-q="${q}"]`).classList.contains('correct')).length },
+    { name: 'Berechtigungen', qs: [12,13,14], score: [12,13,14].filter(q=>state.answered[q] && document.querySelector(`[data-q="${q}"]`).classList.contains('correct')).length },
+    { name: 'Praxiswissen', qs: [17,18,19], score: [17,18,19].filter(q=>state.answered[q] && document.querySelector(`[data-q="${q}"]`).classList.contains('correct')).length }
+  ];
+
+  const bars = document.getElementById('res-bars');
+  bars.innerHTML = cats.map(c => {
+    const p = Math.round((c.score/c.qs.length)*100);
+    return `<div class="result-bar-item">
+      <div class="result-bar-name">${c.name}</div>
+      <div class="result-bar-track"><div class="result-bar-fill" data-pct="${p}"></div></div>
+      <div class="result-bar-val">${c.score}/${c.qs.length} · ${p}%</div>
+    </div>`;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.result-bar-fill').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 100);
+}
+
+// ======================== RESET ========================
+function resetAll() {
+  location.reload();
+}
+</script>
+</body>
+</html>
