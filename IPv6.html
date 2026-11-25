@@ -167,7 +167,7 @@ tr.res{color:var(--mute)}
         <div class="ctrl">
           <label>Standort</label>
           <button type="button" id="m2" aria-label="Vorheriger Standort">−</button>
-          <span class="mono" id="s2v" style="min-width:2ch;text-align:center;font-weight:600">0</span>
+          <span class="mono" id="s2v" style="min-width:2ch;text-align:center;font-weight:600">1</span>
           <button type="button" id="p2" aria-label="Nächster Standort">+</button>
         </div>
         <div class="big" id="r2"></div>
@@ -184,7 +184,7 @@ tr.res{color:var(--mute)}
     </div>
 
     <div class="check">
-      <p>Bei 6 Standorten: Wie lautet das Netz von Standort Nr. 4 (Zählung ab 0)?</p>
+      <p>Bei 6 Standorten: Wie lautet das Netz von Standort 4?</p>
       <div class="ctrl"><input type="text" id="q2" placeholder="2001:db8:abcd:…::/5x" autocomplete="off" spellcheck="false"><button type="button" id="c2">Prüfen</button><button type="button" id="s2">Lösung</button></div>
       <div class="fb" id="f2" aria-live="polite"></div>
     </div>
@@ -256,19 +256,19 @@ const draw2 = () => {
   $('st2').innerHTML = `
     <li><span>Bits von links nehmen, bis 2${sup('n')} ≥ ${N}</span><span class="v">n = ${n}</span><small>2${sup(n)} = ${1 << n}${(1 << n) > N ? ` ≥ ${N}, ${(1 << n) - N} ${(1 << n) - N === 1 ? 'Netz bleibt' : 'Netze bleiben'} als Reserve` : ` = ${N}, passt genau`}</small></li>
     <li><span>Neues Präfix: /48 + ${n}</span><span class="v">/${pre}</span></li>
-    <li><span>Schrittweite im 4. Hextett: 2${sup(16 - n)}</span><span class="v">0x${step.toString(16)}</span><small>${fmtN(step)} dezimal. Netz k beginnt bei k × 0x${step.toString(16)}.</small></li>
+    <li><span>Schrittweite im 4. Hextett: 2${sup(16 - n)}</span><span class="v">0x${step.toString(16)}</span><small>${fmtN(step)} dezimal. Standort k beginnt bei (k − 1) × 0x${step.toString(16)}.</small></li>
     <li><span>Rest pro Standort: ${16 - n} Bit</span><span class="v">${fmtN(step)} × /64</span></li>`;
-  $('s2v').textContent = sel;
+  $('s2v').textContent = sel + 1;
   const rows = [];
   for (let i = 0; i < (1 << n); i++) {
     const v = i * step, b = BASE | (BigInt(v) << 64n), res = i >= N;
     const h = v.toString(16).padStart(4, '0'), e = (v + step - 1).toString(16).padStart(4, '0');
-    rows.push(`<tr data-i="${i}" class="${res ? 'res' : ''}${i === sel ? ' sel' : ''}"><td class="r">${res ? 'Reserve' : i}</td><td class="m"><span class="mark">${i.toString(2).padStart(n, '0')}</span></td><td class="m">${h}</td><td class="m">${fmt(b)}/${pre}</td><td class="m">${h} … ${e}</td></tr>`);
+    rows.push(`<tr data-i="${i}" class="${res ? 'res' : ''}${i === sel ? ' sel' : ''}"><td class="r">${res ? 'Reserve' : i + 1}</td><td class="m"><span class="mark">${i.toString(2).padStart(n, '0')}</span></td><td class="m">${h}</td><td class="m">${fmt(b)}/${pre}</td><td class="m">${h} … ${e}</td></tr>`);
   }
   $('t2').innerHTML = rows.join('');
   const v = sel * step, b = BASE | (BigInt(v) << 64n);
   $('a2').innerHTML = addrHTML(b);
-  $('r2').textContent = (sel >= N ? 'Reserve: ' : `Standort ${sel}: `) + fmt(b) + '/' + pre;
+  $('r2').textContent = (sel >= N ? 'Reserve: ' : `Standort ${sel + 1}: `) + fmt(b) + '/' + pre;
   $('b2').innerHTML = bitsHTML(v, n);
 };
 $('n2').addEventListener('input', e => { N = +e.target.value; draw2() });
@@ -285,13 +285,13 @@ const check = (inp, out, want, pre) => {
   f.className = 'fb ok'; f.textContent = 'Richtig: ' + fmt(want) + '/' + pre;
 };
 const w1 = BASE | (300n << 64n);
-const w2 = BASE | (BigInt(4 * calc(6).step) << 64n);
+const w2 = BASE | (BigInt(3 * calc(6).step) << 64n);
 $('c1').addEventListener('click', () => check('q1', 'f1', w1, 64));
 $('c2').addEventListener('click', () => check('q2', 'f2', w2, calc(6).pre));
 $('q1').addEventListener('keydown', e => { if (e.key === 'Enter') check('q1', 'f1', w1, 64) });
 $('q2').addEventListener('keydown', e => { if (e.key === 'Enter') check('q2', 'f2', w2, calc(6).pre) });
 $('s1').addEventListener('click', () => { const f = $('f1'); f.className = 'fb'; f.textContent = '300 = 0x012c → ' + fmt(w1) + '/64' });
-$('s2').addEventListener('click', () => { const f = $('f2'); f.className = 'fb'; f.textContent = '4 × 0x2000 = 0x8000 → ' + fmt(w2) + '/51' });
+$('s2').addEventListener('click', () => { const f = $('f2'); f.className = 'fb'; f.textContent = 'Standort 4 → 3 × 0x2000 = 0x6000 → ' + fmt(w2) + '/51' });
 
 draw1(); draw2();
 }
