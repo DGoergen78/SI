@@ -64,11 +64,14 @@ input[type=range]{flex:1 1 160px;accent-color:#111;min-height:0;border:0;padding
 .bits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
 .nib{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
 .nib i{font:600 clamp(14px,2.2vw,20px) "JetBrains Mono",monospace;font-style:normal;text-align:center;padding:8px 0;border:1px solid var(--line);background:var(--bg)}
+.nib i.fx{background:var(--con);color:var(--mute)}
 .nib i.on{background:var(--y);color:#111;border-color:#111}
 .nib em{grid-column:1/-1;text-align:center;font:600 15px "JetBrains Mono",monospace;font-style:normal;color:var(--mute);border-top:2px solid var(--line);padding-top:2px}
 .leg{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--mute);margin-top:10px}
 .leg span::before{content:"";display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;border:1px solid var(--ink);background:var(--bg)}
 .leg .y::before{background:var(--y)}
+.leg .f::before{background:var(--con)}
+.addr mark{background:var(--y);color:#111;padding:0 1px}
 .scroll{overflow-x:auto;margin-top:22px}
 table{border-collapse:collapse;width:100%;font-size:15px}
 th{text-align:left;font-weight:500;color:var(--mute);border-bottom:2px solid var(--ink);padding:6px 8px}
@@ -98,7 +101,7 @@ tr.res{color:var(--mute)}
 <header class="band top">
   <div class="wrap">
     <h1>IPv6 Subnetting</h1>
-    <p>Ausgangsnetz für beide Aufgaben: <code>2001:db8:abcd::/48</code>. Eine IPv6-Adresse hat 128 Bit. Davon sind 48 Bit vorgegeben, die unteren 64 Bit gehören dem Host. Zum Unterteilen bleiben die 16 Bit dazwischen.</p>
+    <p>Ausgangsnetz in Aufgabe 1 und 2: <code>2001:db8:abcd::/48</code>. Eine IPv6-Adresse hat 128 Bit. Davon sind 48 Bit vorgegeben, die unteren 64 Bit gehören dem Host. Zum Unterteilen bleiben die 16 Bit dazwischen.</p>
     <div class="bar" aria-hidden="true"><div class="p">/48</div><div class="s">16</div><div class="i">64</div></div>
     <div class="barl"><div><b>Präfix</b>48 Bit, fest</div><div><b>Subnetz-ID</b>16 Bit</div><div><b>Interface-ID</b>64 Bit, immer /64</div></div>
   </div>
@@ -191,6 +194,50 @@ tr.res{color:var(--mute)}
   </div>
 </section>
 
+<section class="band">
+  <div class="wrap">
+    <h2>Aufgabe 3: Ein /56 aufteilen</h2>
+    <p class="given">Gegeben ist <code>2001:db8:abcd:ab00::/56</code>. Es wird vollständig und gleich groß auf <b id="nl3">4</b> Standorte verteilt.</p>
+    <div class="ctrl" style="margin-top:0">
+      <label for="n3">Standorte</label>
+      <input type="range" id="n3" min="2" max="16" value="4">
+      <span class="mono" id="n3v" style="min-width:2ch;font-weight:600">4</span>
+    </div>
+    <div class="task">
+      <div>
+        <ul class="steps" id="st3"></ul>
+        <p class="note">Vorgehen: Wie in Aufgabe 2, nur stehen für Subnetze lediglich die letzten beiden Hex-Ziffern des 4. Hextetts zur Verfügung. Die vorderen Ziffern <code>ab</code> bleiben fest.</p>
+      </div>
+      <div class="panel">
+        <div class="addr" id="a3"></div>
+        <div class="zones"><span>Präfix /56</span><span>Subnetz</span><span>Interface-ID</span></div>
+        <div class="ctrl">
+          <label>Standort</label>
+          <button type="button" id="m3" aria-label="Vorheriger Standort">−</button>
+          <span class="mono" id="s3v" style="min-width:2ch;text-align:center;font-weight:600">1</span>
+          <button type="button" id="p3" aria-label="Nächster Standort">+</button>
+        </div>
+        <div class="big" id="r3"></div>
+        <div class="bits" id="b3"></div>
+        <div class="leg"><span class="f">Präfix /56, fest</span><span class="y">von links genommen: Standort</span><span>bleibt dem Standort für seine /64</span></div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Standort</th><th>Bits</th><th>4. Hextett</th><th>Netz</th><th>Enthaltene /64</th></tr></thead>
+        <tbody id="t3"></tbody>
+      </table>
+    </div>
+
+    <div class="check">
+      <p>Bei 4 Standorten: Wie lautet das Netz von Standort 3?</p>
+      <div class="ctrl"><input type="text" id="q3" placeholder="2001:db8:abcd:ab…::/5x" autocomplete="off" spellcheck="false"><button type="button" id="c3">Prüfen</button><button type="button" id="sl3">Lösung</button></div>
+      <div class="fb" id="f3" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
 <script>
 {
 const BASE = 0x20010db8abcd0000n << 64n;
@@ -221,9 +268,9 @@ const parse = s => {
   return { v: parts.reduce((a, p) => (a << 16n) | BigInt('0x' + p), 0n), pre };
 };
 const addrHTML = b => full(b).map((h, i) => `<span class="${i === 3 ? 'hl' : ''}">${h}</span>`).join('');
-const bitsHTML = (v, nb) => [0, 1, 2, 3].map(k => {
+const bitsHTML = (v, nb, off = 0) => [0, 1, 2, 3].map(k => {
   let s = '';
-  for (let j = 0; j < 4; j++) { const i = k * 4 + j; s += `<i class="${i < nb ? 'on' : ''}">${(v >> (15 - i)) & 1}</i>` }
+  for (let j = 0; j < 4; j++) { const i = k * 4 + j; s += `<i class="${i < off ? 'fx' : i < off + nb ? 'on' : ''}">${(v >> (15 - i)) & 1}</i>` }
   return `<div class="nib">${s}<em>${((v >> (12 - 4 * k)) & 15).toString(16)}</em></div>`;
 }).join('');
 const fmtN = n => n.toLocaleString('de-DE');
@@ -276,6 +323,37 @@ $('m2').addEventListener('click', () => { const t = 1 << calc(N).n; sel = (sel -
 $('p2').addEventListener('click', () => { const t = 1 << calc(N).n; sel = (sel + 1) % t; draw2() });
 $('t2').addEventListener('click', e => { const r = e.target.closest('tr'); if (r) { sel = +r.dataset.i; draw2() } });
 
+/* Aufgabe 3 */
+const BASE3 = 0x20010db8abcdab00n << 64n;
+let N3 = 4, sel3 = 0;
+const calc3 = N => { let n = 0; while ((1 << n) < N) n++; return { n, step: 1 << (8 - n), pre: 56 + n } };
+const h4 = v => (0xab00 | v).toString(16);
+const draw3 = () => {
+  const { n, step, pre } = calc3(N3);
+  if (sel3 >= (1 << n)) sel3 = 0;
+  $('nl3').textContent = N3; $('n3v').textContent = N3; $('s3v').textContent = sel3 + 1;
+  $('st3').innerHTML = `
+    <li><span>Bits für Subnetze: 64 − 56</span><span class="v">8 Bit</span><small>Die letzten beiden Hex-Ziffern des 4. Hextetts: ab<b>00</b>.</small></li>
+    <li><span>Bits von links nehmen, bis 2${sup('n')} ≥ ${N3}</span><span class="v">n = ${n}</span><small>2${sup(n)} = ${1 << n}${(1 << n) > N3 ? ` ≥ ${N3}, ${(1 << n) - N3} ${(1 << n) - N3 === 1 ? 'Netz bleibt' : 'Netze bleiben'} als Reserve` : ` = ${N3}, passt genau`}</small></li>
+    <li><span>Neues Präfix: /56 + ${n}</span><span class="v">/${pre}</span></li>
+    <li><span>Schrittweite: 2${sup(8 - n)}</span><span class="v">0x${step.toString(16)}</span><small>${step} dezimal. Standort k beginnt bei ab00 + (k − 1) × 0x${step.toString(16)}.</small></li>
+    <li><span>Rest pro Standort: ${8 - n} Bit</span><span class="v">${step} × /64</span></li>`;
+  const rows = [];
+  for (let i = 0; i < (1 << n); i++) {
+    const v = i * step, b = BASE3 | (BigInt(v) << 64n), res = i >= N3;
+    rows.push(`<tr data-i="${i}" class="${res ? 'res' : ''}${i === sel3 ? ' sel' : ''}"><td class="r">${res ? 'Reserve' : i + 1}</td><td class="m"><span class="mark">${i.toString(2).padStart(n, '0')}</span></td><td class="m">${h4(v)}</td><td class="m">${fmt(b)}/${pre}</td><td class="m">${h4(v)} … ${h4(v + step - 1)}</td></tr>`);
+  }
+  $('t3').innerHTML = rows.join('');
+  const v = sel3 * step, b = BASE3 | (BigInt(v) << 64n);
+  $('a3').innerHTML = full(b).map((h, i) => `<span>${i === 3 ? h.slice(0, 2) + '<mark>' + h.slice(2) + '</mark>' : h}</span>`).join('');
+  $('r3').textContent = (sel3 >= N3 ? 'Reserve: ' : `Standort ${sel3 + 1}: `) + fmt(b) + '/' + pre;
+  $('b3').innerHTML = bitsHTML(0xab00 | v, n, 8);
+};
+$('n3').addEventListener('input', e => { N3 = +e.target.value; draw3() });
+$('m3').addEventListener('click', () => { const t = 1 << calc3(N3).n; sel3 = (sel3 - 1 + t) % t; draw3() });
+$('p3').addEventListener('click', () => { const t = 1 << calc3(N3).n; sel3 = (sel3 + 1) % t; draw3() });
+$('t3').addEventListener('click', e => { const r = e.target.closest('tr'); if (r) { sel3 = +r.dataset.i; draw3() } });
+
 /* Prüfen */
 const check = (inp, out, want, pre) => {
   const p = parse($(inp).value), f = $(out);
@@ -293,7 +371,12 @@ $('q2').addEventListener('keydown', e => { if (e.key === 'Enter') check('q2', 'f
 $('s1').addEventListener('click', () => { const f = $('f1'); f.className = 'fb'; f.textContent = '300 = 0x012c → ' + fmt(w1) + '/64' });
 $('s2').addEventListener('click', () => { const f = $('f2'); f.className = 'fb'; f.textContent = 'Standort 4 → 3 × 0x2000 = 0x6000 → ' + fmt(w2) + '/51' });
 
-draw1(); draw2();
+const w3 = BASE3 | (BigInt(2 * calc3(4).step) << 64n);
+$('c3').addEventListener('click', () => check('q3', 'f3', w3, calc3(4).pre));
+$('q3').addEventListener('keydown', e => { if (e.key === 'Enter') check('q3', 'f3', w3, calc3(4).pre) });
+$('sl3').addEventListener('click', () => { const f = $('f3'); f.className = 'fb'; f.textContent = 'Standort 3 → ab00 + 2 × 0x40 = ab80 → ' + fmt(w3) + '/58' });
+
+draw1(); draw2(); draw3();
 }
 </script>
 </body>
